@@ -1,0 +1,55 @@
+From ae5187d83a81c8d36717c230f17dba5880829ae1 Mon Sep 17 00:00:00 2001
+From: Nikita <nikitapavlov2828@gmail.com>
+Date: Tue, 18 Jan 2022 17:50:37 +0300
+Subject: [PATCH] Visual changes
+
+---
+ app/common/directives/app-header.html       | 2 +-
+ app/index.html                              | 2 +-
+ app/login/controllers/login-controller.html | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/app/common/directives/app-header.html b/app/common/directives/app-header.html
+index ec03874..4630408 100644
+--- a/app/common/directives/app-header.html
++++ b/app/common/directives/app-header.html
+@@ -1,7 +1,7 @@
+ <header id="header" class="header">
+   <!-- HEADER -->
+   <div class="header__info-section">
+-    <span class="header__title">OpenBMC</span>
++    <span class="header__title">SUBPS Zvezda</span>
+     <div class="header__actions" uib-dropdown>
+       <button id="user-actions" type="button" uib-dropdown-toggle>
+         <icon class="icon-user" file="icon-avatar.svg"></icon>
+diff --git a/app/index.html b/app/index.html
+index 8bcd4d6..8c40d95 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -4,7 +4,7 @@
+ <head>
+     <meta http-equiv="Content-Security-Policy">
+     <meta charset="UTF-8">
+-    <title>OpenBMC</title>
++    <title>SUBPS Zvezda</title>
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+ 
+     <base href="/">
+diff --git a/app/login/controllers/login-controller.html b/app/login/controllers/login-controller.html
+index e162d8f..b2d1f3b 100644
+--- a/app/login/controllers/login-controller.html
++++ b/app/login/controllers/login-controller.html
+@@ -1,8 +1,8 @@
+ <div>
+   <div class="row">
+     <div class="columns large-6">
+-      <img src="../../assets/images/logo.svg" class="login__logo" alt="OpenBMC logo"/>
+-      <h1 class="login__desc">OpenBMC</h1>
++      <img src="../../assets/images/logo.svg" class="login__logo" alt="SUBPS Zvezda logo"/>
++      <h1 class="login__desc">SUBPS Zvezda</h1>
+     </div>
+     <div class="columns large-6">
+       <form id="login__form" name="login__form" action="" ng-class="{'submitted' : submitted}">
+-- 
+2.30.2
+
