@@ -1,0 +1,59 @@
+From 4f4b184e2e262723b3b91629bbb736c6b5035f8f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E2=80=9CNikita?= <“niikitta@yahoo.com”>
+Date: Sun, 13 Feb 2022 16:57:30 +0300
+Subject: [PATCH] Visual changes for testing
+
+---
+ .../controllers/system-overview-controller.html      | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/app/overview/controllers/system-overview-controller.html b/app/overview/controllers/system-overview-controller.html
+index 13d907c..8349b67 100644
+--- a/app/overview/controllers/system-overview-controller.html
++++ b/app/overview/controllers/system-overview-controller.html
+@@ -1,6 +1,6 @@
+ <loader loading="loading"></loader>
+ <div class="page overview">
+-  <h1 class="page-title inline">{{ dataService.hostname }}</h1>
++  <h1 class="page-title inline">{{ "Zvezda Iridium" }}</h1>
+   <button class="btn  btn-tertiary" ng-click="edit_hostname = !edit_hostname" aria-label="edit host name">
+     <icon class="nav-icon" aria-hidden="true" file="icon-edit.svg"></icon>
+   </button>
+@@ -14,21 +14,21 @@
+           <div class="column large-6">
+             <dl class="list-pair">
+               <dt>Model</dt>
+-              <dd>{{ server_info.Model  || "N/A"  }}</dd>
++              <dd>{{ "Iridium"  }}</dd>
+             </dl>
+             <dl class="list-pair">
+               <dt>Serial number</dt>
+-              <dd>{{ server_info.SerialNumber || "N/A"  }}</dd>
++              <dd>{{ "test-S/N"  }}</dd>
+             </dl>
+           </div>
+           <div class="column large-6">
+             <dl class="list-pair">
+               <dt>Manufacturer</dt>
+-              <dd>{{ server_info.Manufacturer || "N/A" }}</dd>
++              <dd>{{ "Zvezda" }}</dd>
+             </dl>
+             <dl class="list-pair">
+               <dt>Firmware version</dt>
+-              <dd>{{ server_firmware }}</dd>
++              <dd>{{ "v1.3" }}</dd>
+             </dl>
+           </div>
+         </div>
+@@ -43,7 +43,7 @@
+             <dl class="list-pair">
+               <dt>Hostname</dt>
+               <dd class="overview__hostname">
+-                {{ dataService.hostname }}
++                {{ "iridium" }}
+               </dd>
+             </dl>
+             <dl class="list-pair" ng-repeat="(ifaceName,iface) in dataService.network_interfaces">
+-- 
+2.30.2
+
