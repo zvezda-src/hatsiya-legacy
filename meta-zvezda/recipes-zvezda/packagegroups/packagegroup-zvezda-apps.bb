@@ -21,7 +21,9 @@ RPROVIDES:${PN}-flash += "virtual-obmc-flash-mgmt"
 RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
 
 SUMMARY:${PN}-chassis = "Zvezda Chassis"
-RDEPENDS:${PN}-chassis = ""
+RDEPENDS:${PN}-chassis = " \
+	x86-power-control \
+	"
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
 RDEPENDS:${PN}-fans = ""
@@ -33,6 +35,6 @@ RDEPENDS:${PN}-flash = " \
 
 SUMMARY:${PN}-system = "Zvezda System"
 RDEPENDS:${PN}-system = " \
-        phosphor-hwmon \
+	phosphor-hwmon \
 	phosphor-webui \
         "
