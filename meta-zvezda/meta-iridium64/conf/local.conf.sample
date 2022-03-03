@@ -254,12 +254,12 @@ PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
 # this doesn't mean anything to you.
 CONF_VERSION = "2"
 
-# Set the root password to '0penBmc'
+# Set the root password to ''
 # Defaults from meta-phosphor/conf/distro/include/phosphor-defaults.inc
 
 
-# Add default administrative account (login: admin, password: )
-DEFAULT_ADMIN_PASSWORD = "'\$6\$N3k4ad5sMN7\$tShb9.IhL5jnMVlxIAI/RtAaR259pAWUDFlRRX8O5QocvBsYZ8mm0HLyGfTLai.ZCA.niQno/XpfayDEtlDyg/'"
+# Add default administrative account (login: , password: )
+DEFAULT_ADMIN_PASSWORD = "'\$6\$AaJWW2KhKN\$qNE2FAZ/V9uTpBeSKjjI/j1xlY2AhFICNYRbdG.nLdwVURYoGYXST/LcB2eMUcqNpQZmnFlL1UsnRv0uqZ9Hz1'"
 EXTRA_USERS_PARAMS:append:pn-obmc-phosphor-image = "\
-  useradd -p ${DEFAULT_ADMIN_PASSWORD} -g users -G priv-admin,ipmi -N admin; \
+  useradd -p ${DEFAULT_ADMIN_PASSWORD} -g users -G priv-admin,ipmi -N zvezda; \
 "
