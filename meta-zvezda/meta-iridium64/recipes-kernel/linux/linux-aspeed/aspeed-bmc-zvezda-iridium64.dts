@@ -175,33 +175,10 @@
                 compatible = "ti,lm95241";
                 reg = <0x2b>;
         };
-        eeprom@50 {
-                compatible = "atmel,24c128";
-                reg = <0x50>;
-        };
-        eeprom@a0 {
-                compatible = "atmel,24c128";
-                reg = <0xa0>;
-        };
-
 };
 
 &i2c4 {
         status = "okay";
-        lm95241@32 {
-                compatible = "ti,lm95241";
-                reg = <0x32>;
-        };
-
-        lm95241@54 {
-                compatible = "ti,lm95241";
-                reg = <0x54>;
-        };
-
-        lm95241@56 {
-                compatible = "ti,lm95241";
-                reg = <0x56>;
-        };
 };
 
 &i2c5 {

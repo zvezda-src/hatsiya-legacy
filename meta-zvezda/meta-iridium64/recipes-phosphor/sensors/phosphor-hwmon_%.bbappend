@@ -3,9 +3,9 @@ FILESEXTRAPATHS:prepend:iridium64 := "${THISDIR}/${PN}:"
 EXTRA_OEMESON:append:iridium64 = " -Dnegative-errno-on-fail=true"
 
 CHIPS = " \
-        bus@1e78a140/i2c-bus@140/lm95241@32 \
-        bus@1e78a140/i2c-bus@140/lm95241@54 \
-        bus@1e78a140/i2c-bus@140/lm95241@56 \
+        bus@1e78a000/i2c-bus@100/lm95241@19 \
+        bus@1e78a000/i2c-bus@100/lm95241@2a \
+        bus@1e78a000/i2c-bus@100/lm95241@2b \
         pwm-tacho-controller@1e786000 \
         "
 ITEMSFMT = "ahb/apb/{0}.conf"
