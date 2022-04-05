@@ -21,9 +21,9 @@ RPROVIDES:${PN}-flash += "virtual-obmc-flash-mgmt"
 RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
 
 SUMMARY:${PN}-chassis = "Zvezda Chassis"
-RDEPENDS:${PN}-chassis = " \
-	x86-power-control \
-	"
+RDEPENDS:${PN}-chassis = "
+        pwr-ctrl \                
+        "
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
 RDEPENDS:${PN}-fans = ""
