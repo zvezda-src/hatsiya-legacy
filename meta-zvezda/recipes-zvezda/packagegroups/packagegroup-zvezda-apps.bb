@@ -37,4 +37,5 @@ SUMMARY:${PN}-system = "Zvezda System"
 RDEPENDS:${PN}-system = " \
 	phosphor-hwmon \
 	webui-vue \
+	uidled \
         "
