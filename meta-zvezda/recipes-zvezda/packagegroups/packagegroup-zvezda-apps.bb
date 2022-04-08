@@ -36,5 +36,5 @@ RDEPENDS:${PN}-flash = " \
 SUMMARY:${PN}-system = "Zvezda System"
 RDEPENDS:${PN}-system = " \
 	phosphor-hwmon \
-	phosphor-webui \
+	webui-vue \
         "
