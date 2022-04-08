@@ -1,16 +1,16 @@
-From 587ad6a9f95b4ac66c8899a9c9ed26a4395d6f4c Mon Sep 17 00:00:00 2001
+From 639b99b33f20a550b4f928cee3897c1e4581f811 Mon Sep 17 00:00:00 2001
 From: Nikita Pavlov <“niikitta@yahoo.com”>
-Date: Mon, 28 Mar 2022 10:55:13 +0300
-Subject: [PATCH 1/2] WebUI changes (temporary)
+Date: Fri, 8 Apr 2022 10:37:37 +0300
+Subject: [PATCH 1/2] WebUI-changes-temporary
 
 ---
  public/index.html                             |  2 +-
- .../AppNavigation/AppNavigationMixin.js       | 74 +++++++++----------
+ .../AppNavigation/AppNavigationMixin.js       | 64 +++++++++----------
  src/views/Overview/Overview.vue               |  4 +-
- 3 files changed, 40 insertions(+), 40 deletions(-)
+ 3 files changed, 35 insertions(+), 35 deletions(-)
 
 diff --git a/public/index.html b/public/index.html
-index c355ece..d094a49 100644
+index c355ece..3f68ebd 100644
 --- a/public/index.html
 +++ b/public/index.html
 @@ -6,7 +6,7 @@
@@ -18,12 +18,12 @@ index c355ece..d094a49 100644
      <meta name="viewport" content="width=device-width,initial-scale=1.0">
      <link rel="icon" href="<%= BASE_URL %>favicon.ico">
 -    <title>OpenBMC Web UI</title>
-+    <title>Zvezda BMC</title>
++    <title>Zvezda Web UI</title>
    </head>
    <body>
      <noscript>
 diff --git a/src/components/AppNavigation/AppNavigationMixin.js b/src/components/AppNavigation/AppNavigationMixin.js
-index bbbbb1e..fb3d307 100644
+index edeabc5..716b7c9 100644
 --- a/src/components/AppNavigation/AppNavigationMixin.js
 +++ b/src/components/AppNavigation/AppNavigationMixin.js
 @@ -37,11 +37,11 @@ const AppNavigationMixin = {
@@ -60,24 +60,7 @@ index bbbbb1e..fb3d307 100644
              {
                id: 'sensors',
                label: this.$t('appNavigation.sensors'),
-@@ -76,11 +76,11 @@ const AppNavigationMixin = {
-               label: this.$t('appNavigation.kvm'),
-               route: '/operations/kvm',
-             },
--            {
--              id: 'key-clear',
--              label: this.$t('appNavigation.keyClear'),
--              route: '/operations/key-clear',
--            },
-+            // {
-+            //   id: 'key-clear',
-+            //   label: this.$t('appNavigation.keyClear'),
-+            //   route: '/operations/key-clear',
-+            // },
-             {
-               id: 'firmware',
-               label: this.$t('appNavigation.firmware'),
-@@ -91,11 +91,11 @@ const AppNavigationMixin = {
+@@ -86,11 +86,11 @@ const AppNavigationMixin = {
                label: this.$t('appNavigation.rebootBmc'),
                route: '/operations/reboot-bmc',
              },
@@ -94,7 +77,7 @@ index bbbbb1e..fb3d307 100644
              {
                id: 'server-power-operations',
                label: this.$t('appNavigation.serverPowerOperations'),
-@@ -150,11 +150,11 @@ const AppNavigationMixin = {
+@@ -145,11 +145,11 @@ const AppNavigationMixin = {
                label: this.$t('appNavigation.userManagement'),
                route: '/security-and-access/user-management',
              },
@@ -111,7 +94,7 @@ index bbbbb1e..fb3d307 100644
              {
                id: 'certificates',
                label: this.$t('appNavigation.certificates'),
-@@ -162,18 +162,18 @@ const AppNavigationMixin = {
+@@ -157,18 +157,18 @@ const AppNavigationMixin = {
              },
            ],
          },
