@@ -1,8 +1,8 @@
 SUMMARY = "Server power control with on/off functionality"
 DESCRIPTION = "Server power control with on/off functionality"
 
-SRC_URI = "git://github.com/niikitta/pwr-ctrl;branch=main;protocol=https"
-SRCREV = "e9300b22551cec94234f638bbec5905d06118f92"
+SRC_URI = "git://github.com/niikitta/pwr-ctrl;branch=dev0;protocol=https"
+SRCREV = "216c4c9d3476209b16eba587e7c7247362069995"
 
 PV = "1.0+git${SRCPV}"
 
