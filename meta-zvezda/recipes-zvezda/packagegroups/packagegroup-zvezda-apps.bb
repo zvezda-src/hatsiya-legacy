@@ -38,4 +38,5 @@ RDEPENDS:${PN}-system = " \
 	phosphor-hwmon \
 	webui-vue \
 	uidled \
+        libpeci \
         "

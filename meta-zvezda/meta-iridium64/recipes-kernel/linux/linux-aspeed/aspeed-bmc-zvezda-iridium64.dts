@@ -143,6 +143,18 @@
 	status = "okay";
 };
 
+&peci0 {
+        status = "okay";
+        peci-client@30 {
+                compatible = "intel,peci-client";
+                reg = <0x30>;
+        };
+        peci-client@31 {
+                compatible = "intel,peci-client";
+                reg = <0x31>;
+        };
+};
+
 &i2c0 {
 	status = "okay";
 };
