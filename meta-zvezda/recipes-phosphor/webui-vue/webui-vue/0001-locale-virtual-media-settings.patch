@@ -1,0 +1,39 @@
+From 23df2723fcdadbdc8bbe952d095b4f207ddb5316 Mon Sep 17 00:00:00 2001
+From: Nikita Pavlov <“niikitta@yahoo.com”>
+Date: Fri, 22 Apr 2022 18:22:19 +0300
+Subject: [PATCH] locale virtual media settings
+
+---
+ src/locales/en-US.json | 2 +-
+ src/locales/ru-RU.json | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/locales/en-US.json b/src/locales/en-US.json
+index f29ba0e..4ed18f9 100644
+--- a/src/locales/en-US.json
++++ b/src/locales/en-US.json
+@@ -856,7 +856,7 @@
+   },
+   "pageVirtualMedia": {
+     "configureConnection": "Configure Connection",
+-    "defaultDeviceName": "Virtual media device",
++    "defaultDeviceName": "Virtual media device. Support format: iso.",
+     "start": "Start",
+     "stop": "Stop",
+     "virtualMediaSubTitleFirst": "Load image from web browser",
+diff --git a/src/locales/ru-RU.json b/src/locales/ru-RU.json
+index 659d26c..93b7847 100644
+--- a/src/locales/ru-RU.json
++++ b/src/locales/ru-RU.json
+@@ -854,7 +854,7 @@
+   },
+   "pageVirtualMedia": {
+     "configureConnection": "Сконфигурировать соединение",
+-    "defaultDeviceName": "Виртуальный носитель",
++    "defaultDeviceName": "Виртуальный носитель. Формат поддеживаемых файлов: iso.",
+     "start": "Старт",
+     "stop": "Стоп",
+     "virtualMediaSubTitleFirst": "Подключить образ с помощью веб браузера",
+-- 
+2.30.2
+
