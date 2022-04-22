@@ -17,3 +17,12 @@ ITEMS += "iio-hwmon.conf"
 ENVS = "obmc/hwmon/{0}"
 SYSTEMD_ENVIRONMENT_FILE:${PN}:append:iridium64 := "${@compose_list(d, 'ENVS', 'ITEMS')}"
 
+PECINAMES = " \
+        peci-0/0-30/peci-cputemp.0 \
+        peci-0/0-30/peci-dimmtemp.0 \
+        "
+PECIITEMSFMT = "devices/platform/ahb/ahb--apb/ahb--apb--bus@1e78b000/1e78b000.peci-bus/{0}.conf"
+PECIITEMS = "${@compose_list(d, 'PECIITEMSFMT', 'PECINAMES')}"
+PECIENVS = "obmc/hwmon/{0}"
+SYSTEMD_ENVIRONMENT_FILE:${PN}:append:iridium64 = " ${@compose_list(d, 'PECIENVS', 'PECIITEMS')}"
+
