@@ -6,6 +6,7 @@ SRC_URI:append:zvezda = " file://favicon.ico \
 			  file://built-on-openbmc-logo.svg \
 			  file://0001-WebUI-changes-temporary.patch \
 			  file://0002-WebUI-changes-more-temporary.patch \
+			  file://0001-locale-virtual-media-settings.patch \
 			  "
 
 do_compile:prepend:zvezda() {
