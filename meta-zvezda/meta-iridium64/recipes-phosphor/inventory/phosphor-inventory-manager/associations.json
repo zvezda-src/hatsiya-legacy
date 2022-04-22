@@ -1,0 +1,55 @@
+[
+    {
+        "path": "system/chassis",
+        "endpoints":
+        [
+            {
+                "types":
+                {
+                    "rType": "chassis",
+                    "fType": "all_sensors"
+                },
+                "paths":
+                [
+                    "/xyz/openbmc_project/sensors/temperature/ambient",
+                    "/xyz/openbmc_project/sensors/temperature/bmc",
+                    "/xyz/openbmc_project/sensors/temperature/inlet",
+                    "/xyz/openbmc_project/sensors/temperature/cpu0_vr",
+                    "/xyz/openbmc_project/sensors/temperature/cpu1_vr",
+                    "/xyz/openbmc_project/sensors/temperature/ambient",
+                    "/xyz/openbmc_project/sensors/temperature/Die_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_0_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_1_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_2_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_3_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_4_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_5_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_6_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_7_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_8_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_9_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_10_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_11_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_12_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_13_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_14_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_15_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_16_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_17_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_18_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_19_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_20_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_21_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/Core_22_CPU0",
+                    "/xyz/openbmc_project/sensors/temperature/DIMM_G1_CPU0",
+                    "/xyz/openbmc_project/sensors/fan_tach/fan1",
+                    "/xyz/openbmc_project/sensors/fan_tach/fan2",
+                    "/xyz/openbmc_project/sensors/fan_tach/fan3",
+                    "/xyz/openbmc_project/sensors/fan_tach/fan4",
+                    "/xyz/openbmc_project/sensors/fan_tach/fan5",
+                    "/xyz/openbmc_project/sensors/fan_tach/fan6"
+                ]
+            }
+        ]
+    }
+]
