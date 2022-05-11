@@ -87,6 +87,11 @@
 
 &gpio {
 	status = "okay";
+	pinctrl-names = "pass-through";
+    pinctrl-0 = <&pinctrl_gpid0_default
+                    &pinctrl_gpid2_default>;
+
+
 	gpio-line-names =
 	/*A0-A7*/	"","","","","","","","",
 	/*B0-B7*/	"","","","","","","","",

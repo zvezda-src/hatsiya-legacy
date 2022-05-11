@@ -4,7 +4,8 @@ SRC_URI += "\
         file://aspeed-bmc-zvezda-iridium64.dts \
         file://openbmc-flash-layout-64.dtsi \
 	file://iridium64.cfg \
-        "
+    	file://0001-pass-through-modifications-for-GPIOD-group.patch \
+	"
 
 do_patch:append(){
         for DTB in "${KERNEL_DEVICETREE}"; do
