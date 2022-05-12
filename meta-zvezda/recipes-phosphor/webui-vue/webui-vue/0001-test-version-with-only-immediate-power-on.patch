@@ -1,0 +1,48 @@
+From b61155b431db0165ad29fa44c00298940d05eca4 Mon Sep 17 00:00:00 2001
+From: Nikita Pavlov <“niikitta@yahoo.com”>
+Date: Thu, 12 May 2022 16:21:59 +0300
+Subject: [PATCH] test version with only immediate power on
+
+---
+ .../ServerPowerOperations/ServerPowerOperations.vue         | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue b/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
+index 9e03083..527722a 100644
+--- a/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
++++ b/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
+@@ -78,7 +78,8 @@
+             </b-button>
+           </template>
+           <template v-else>
+-            <!-- Reboot server options -->
++            <!-- 
++            <! Reboot server options ->
+             <b-form novalidate class="mb-5" @submit.prevent="rebootServer">
+               <b-form-group
+                 :label="$t('pageServerPowerOperations.rebootServer')"
+@@ -108,11 +109,13 @@
+                 {{ $t('pageServerPowerOperations.reboot') }}
+               </b-button>
+             </b-form>
++            -->
+             <!-- Shutdown server options -->
+             <b-form novalidate @submit.prevent="shutdownServer">
+               <b-form-group
+                 :label="$t('pageServerPowerOperations.shutdownServer')"
+               >
++                <!--
+                 <b-form-radio
+                   v-model="form.shutdownOption"
+                   name="shutdown-option"
+@@ -121,6 +124,7 @@
+                 >
+                   {{ $t('pageServerPowerOperations.orderlyShutdown') }}
+                 </b-form-radio>
++                -->
+                 <b-form-radio
+                   v-model="form.shutdownOption"
+                   name="shutdown-option"
+-- 
+2.30.2
+
