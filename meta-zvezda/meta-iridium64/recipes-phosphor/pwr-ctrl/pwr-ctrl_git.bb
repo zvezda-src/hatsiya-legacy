@@ -2,7 +2,7 @@ SUMMARY = "Server power control with on/off functionality"
 DESCRIPTION = "Server power control with on/off functionality"
 
 SRC_URI = "git://github.com/niikitta/pwr-ctrl;branch=dev0;protocol=https"
-SRCREV = "216c4c9d3476209b16eba587e7c7247362069995"
+SRCREV = "9b2b1aaf529a8d752daceda3a74d8829ca1d6647"
 
 PV = "1.0+git${SRCPV}"
 
@@ -20,4 +20,5 @@ SYSTEMD_AUTO_ENBALE = "enable"
 DEPENDS += " \ 
         boost \
         sdbusplus \
+        gpiod \
         "
