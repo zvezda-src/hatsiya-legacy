@@ -1,0 +1,49 @@
+From d392daf11ec8ade29d806e83a10dfc476fc14993 Mon Sep 17 00:00:00 2001
+From: Nikita Pavlov <“niikitta@yahoo.com”>
+Date: Fri, 13 May 2022 15:34:24 +0300
+Subject: [PATCH] test power operations
+
+---
+ .../ServerPowerOperations/ServerPowerOperations.vue          | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue b/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
+index 9e03083..71416cf 100644
+--- a/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
++++ b/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
+@@ -83,6 +83,7 @@
+               <b-form-group
+                 :label="$t('pageServerPowerOperations.rebootServer')"
+               >
++                <!--
+                 <b-form-radio
+                   v-model="form.rebootOption"
+                   name="reboot-option"
+@@ -91,6 +92,7 @@
+                 >
+                   {{ $t('pageServerPowerOperations.orderlyReboot') }}
+                 </b-form-radio>
++                -->
+                 <b-form-radio
+                   v-model="form.rebootOption"
+                   name="reboot-option"
+@@ -108,7 +110,7 @@
+                 {{ $t('pageServerPowerOperations.reboot') }}
+               </b-button>
+             </b-form>
+-            <!-- Shutdown server options -->
++            <!-- Shutdown server options 
+             <b-form novalidate @submit.prevent="shutdownServer">
+               <b-form-group
+                 :label="$t('pageServerPowerOperations.shutdownServer')"
+@@ -138,6 +140,7 @@
+                 {{ $t('pageServerPowerOperations.shutDown') }}
+               </b-button>
+             </b-form>
++            -->
+           </template>
+         </page-section>
+       </b-col>
+-- 
+2.30.2
+
