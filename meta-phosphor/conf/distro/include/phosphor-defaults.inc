@@ -249,5 +249,5 @@ inherit extrausers
 DEFAULT_OPENBMC_PASSWORD = "'\$6\$AaJWW2KhKN\$qNE2FAZ/V9uTpBeSKjjI/j1xlY2AhFICNYRbdG.nLdwVURYoGYXST/LcB2eMUcqNpQZmnFlL1UsnRv0uqZ9Hz1'"
 
 EXTRA_USERS_PARAMS:pn-obmc-phosphor-image = " \
-  usermod -p ${DEFAULT_OPENBMC_PASSWORD} zvezda; \
+  usermod -p ${DEFAULT_OPENBMC_PASSWORD} root; \
   "
