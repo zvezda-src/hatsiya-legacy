@@ -39,4 +39,5 @@ RDEPENDS:${PN}-system = " \
 	webui-vue \
 	uidled \
         libpeci \
+        entity-manager \
         "
