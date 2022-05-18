@@ -261,5 +261,5 @@ CONF_VERSION = "2"
 # Add default administrative account (login: , password: )
 DEFAULT_ADMIN_PASSWORD = "'\$6\$AaJWW2KhKN\$qNE2FAZ/V9uTpBeSKjjI/j1xlY2AhFICNYRbdG.nLdwVURYoGYXST/LcB2eMUcqNpQZmnFlL1UsnRv0uqZ9Hz1'"
 EXTRA_USERS_PARAMS:append:pn-obmc-phosphor-image = "\
-  useradd -p ${DEFAULT_ADMIN_PASSWORD} -g users -G priv-admin,ipmi -N zvezda; \
+  useradd -p ${DEFAULT_ADMIN_PASSWORD} -g users -G priv-admin,ipmi,web,redfish -N zvezda; \
 "
