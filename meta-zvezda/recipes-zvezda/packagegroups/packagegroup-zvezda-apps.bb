@@ -40,4 +40,5 @@ RDEPENDS:${PN}-system = " \
 	uidled \
         libpeci \
         entity-manager \
+        fan-control \
         "
