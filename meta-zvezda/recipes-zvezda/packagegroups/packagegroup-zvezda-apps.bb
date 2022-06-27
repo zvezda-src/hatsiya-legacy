@@ -21,7 +21,7 @@ RPROVIDES:${PN}-flash += "virtual-obmc-flash-mgmt"
 RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
 
 SUMMARY:${PN}-chassis = "Zvezda Chassis"
-RDEPENDS:${PN}-chassis = "
+RDEPENDS:${PN}-chassis = " \
         pwr-ctrl \                
         "
 
