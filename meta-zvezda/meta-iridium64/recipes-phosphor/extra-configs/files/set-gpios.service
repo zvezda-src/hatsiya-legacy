@@ -1,0 +1,10 @@
+[Unit]
+Description=Set configuration gpios
+Before=xyz.openbmc_project.Inventory.Manager.service
+
+[Service]
+ExecStart=/usr/bin/set-gpios
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

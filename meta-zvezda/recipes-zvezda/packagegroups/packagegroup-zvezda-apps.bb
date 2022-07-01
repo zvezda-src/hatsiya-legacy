@@ -41,4 +41,5 @@ RDEPENDS:${PN}-system = " \
         libpeci \
         entity-manager \
         fan-control \
+        set-gpios \
         "
