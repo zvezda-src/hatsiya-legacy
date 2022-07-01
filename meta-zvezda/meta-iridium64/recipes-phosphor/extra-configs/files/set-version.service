@@ -1,0 +1,10 @@
+[Unit]
+Description=Set version
+Before=xyz.openbmc_project.Software.BMC.Updater.service
+
+[Service]
+ExecStart=/usr/bin/set-version
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

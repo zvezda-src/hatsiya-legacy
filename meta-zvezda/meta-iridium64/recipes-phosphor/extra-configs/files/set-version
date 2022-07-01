@@ -1,0 +1,8 @@
+#! /bin/bash
+
+version=1.0.3
+obj=$(busctl tree xyz.openbmc_project.Software.BMC.Updater \
+        | grep -i "software\/" | tr -d ' `-')
+
+busctl set-property xyz.openbmc_project.Software.BMC.Updater \
+ $obj xyz.openbmc_project.Software.Version Version s $version
