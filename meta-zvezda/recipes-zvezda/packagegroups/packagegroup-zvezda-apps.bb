@@ -42,4 +42,5 @@ RDEPENDS:${PN}-system = " \
         entity-manager \
         fan-control \
         set-gpios \
+        set-version \
         "
