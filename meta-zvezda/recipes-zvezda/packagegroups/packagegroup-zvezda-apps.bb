@@ -43,4 +43,5 @@ RDEPENDS:${PN}-system = " \
         fan-control \
         set-gpios \
         set-version \
+        boardinfo \
         "
