@@ -14,11 +14,12 @@ inherit allarch
 SRC_URI = "\
     file://boardinfo \
     file://boardinfo.service \
+    file://boardinfo.timer \
     "
 
 inherit obmc-phosphor-systemd
 
-SYSTEMD_SERVICE:${PN} += "boardinfo.service"
+SYSTEMD_SERVICE:${PN} += "boardinfo.service boardinfo.timer"
 
 do_install() {
     install -d ${D}${bindir}

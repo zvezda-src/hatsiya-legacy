@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer runs boardinfo
+
+[Timer]
+OnBootSec=2min
+Unit=boardinfo.service
+
+[Install]
+WantedBy=multi-user.target

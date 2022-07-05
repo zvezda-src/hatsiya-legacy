@@ -1,10 +1,6 @@
 [Unit]
 Description=Boardinfo setter
-After=xyz.openbmc_project.EntityManager.service
 
 [Service]
 ExecStart=/usr/bin/boardinfo
 Type=simple
-
-[Install]
-WantedBy=multi-user.target
