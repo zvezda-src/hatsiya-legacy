@@ -20,3 +20,4 @@ DEPENDS += " \
         boost \
         libgpiod \
         "
+FILES:${PN}  += "${systemd_system_unitdir}/fan-control.service"
