@@ -2,7 +2,7 @@
 Description=Timer runs boardinfo
 
 [Timer]
-OnBootSec=2min
+OnBootSec=85sec
 Unit=boardinfo.service
 
 [Install]
