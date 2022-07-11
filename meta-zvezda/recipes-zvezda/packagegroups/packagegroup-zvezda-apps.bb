@@ -45,4 +45,9 @@ RDEPENDS:${PN}-system = " \
         set-version \
         boardinfo \
         ipmitool \
+        phosphor-hostlogger \
+        phosphor-sel-logger \
+        phosphor-post-code-manager \
+        phosphor-host-postd \
+        intel-ipmi-oem \
         "
