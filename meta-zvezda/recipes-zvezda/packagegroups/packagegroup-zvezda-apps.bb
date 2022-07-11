@@ -44,4 +44,5 @@ RDEPENDS:${PN}-system = " \
         set-gpios \
         set-version \
         boardinfo \
+        ipmitool \
         "

@@ -149,19 +149,25 @@
 };
 
 &peci0 {
-        status = "okay";
-        peci-client@30 {
-                compatible = "intel,peci-client";
-                reg = <0x30>;
-        };
-        peci-client@31 {
-                compatible = "intel,peci-client";
-                reg = <0x31>;
-        };
+    status = "okay";
+    peci-client@30 {
+        compatible = "intel,peci-client";
+        reg = <0x30>;
+    };
+    peci-client@31 {
+        compatible = "intel,peci-client";
+        reg = <0x31>;
+    };
 };
 
 &i2c0 {
 	status = "okay";
+	ipmb0@10 {
+		compatible = "ipmb-dev";
+		reg = <(0x10 | I2C_OWN_SLAVE_ADDRESS)>;
+		i2c-protocol;
+	};
+
 };
 
 &i2c1 {
