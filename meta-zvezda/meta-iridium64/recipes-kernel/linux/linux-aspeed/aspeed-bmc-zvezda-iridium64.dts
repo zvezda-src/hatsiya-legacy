@@ -26,17 +26,22 @@
         #address-cells = <1>;
         #size-cells = <1>;
         ranges;
+		
+		flash_memory: region@98000000 {
+				no-map;
+				reg = <0x98000000 0x04000000>; /* 64M */
+		};
 
         vga_memory: framebuffer@9f000000 {
-        no-map;
-        reg = <0x9f000000 0x01000000>; /* 16M */
-	};
+				no-map;
+				reg = <0x9f000000 0x01000000>; /* 16M */
+		};
 
         gfx_memory: framebuffer {
-                size = <0x01000000>;
-                alignment = <0x01000000>;
-                compatible = "shared-dma-pool";
-                reusable;
+				size = <0x01000000>;
+				alignment = <0x01000000>;
+				compatible = "shared-dma-pool";
+				reusable;
         };
 
         video_engine_memory: jpegbuffer {
