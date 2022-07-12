@@ -1,0 +1,86 @@
+#! /bin/bash
+
+show_snmp_conn()
+{
+    local structure=$(busctl tree xyz.openbmc_project.Network.SNMP --list)
+    echo "===================="
+    echo "| SNMP connections |"
+    echo "===================="
+    for elem in $structure; do
+        # 42 is last position in iface /xyz/openbmc_project/network/snmp/manager/ 
+        local id=${elem:42}
+        if echo $id | grep [0-9] 1> /dev/null; then
+            iparr=$(busctl get-property xyz.openbmc_project.Network.SNMP \
+             /xyz/openbmc_project/network/snmp/manager/$id \
+              xyz.openbmc_project.Network.Client Address)
+            port=$(busctl get-property xyz.openbmc_project.Network.SNMP \
+             /xyz/openbmc_project/network/snmp/manager/$id \
+              xyz.openbmc_project.Network.Client Port)
+            port=${port:2} 
+            if [ -n ipaddr ]; then
+                IFS='"'
+                for ip in $iparr; do
+                    if echo $ip | grep [0-9] 1> /dev/null; then
+                        echo > /dev/null
+                    fi 
+                done
+            fi
+            echo "--------------------"
+            echo "id: $id"
+            echo "ip address: $ip"
+            echo "port: $port"        
+        fi
+    done
+    echo "--------------------"
+    exit
+}
+
+init_new_snmp_conn()
+{
+    busctl call xyz.openbmc_project.Network.SNMP \
+     /xyz/openbmc_project/network/snmp/manager \
+      xyz.openbmc_project.Network.Client.Create \
+      Client sq "$ip" $port 1> /dev/null
+}
+
+delete_snmp_conn()
+{
+    busctl call xyz.openbmc_project.Network.SNMP \
+     /xyz/openbmc_project/network/snmp/manager/$1 \
+      xyz.openbmc_project.Object.Delete Delete 2> /dev/null    
+}
+
+help() 
+{
+    echo "Usage: snmpctl <parameters>."
+    echo "  -a IP address "
+    echo "  -p Port "
+    echo "  -d Set SNMP connection id"
+    echo "  --show Show SNMP connections "
+    echo "To add SNMP connection -a and -p keys should be described. "
+}
+
+while [ -n "$1" ]; do
+case "$1" in
+    -a) ip=$2 ;;
+    -p) port=$2 ;;
+    -d) id=$2 ;;
+    --show) show_snmp_conn
+esac
+shift
+done
+
+if [ -z "$id" ] && [ -z "$ip" ] && [ -z "$port" ]; then 
+    help
+    exit
+fi
+
+if [ -n "$ip" ] && [ -n "$port" ]; then 
+    init_new_snmp_conn $ip $port
+    exit
+fi
+
+if [ -n "$id" ] && [ -z "$ip" ] && [ -z "$port" ]; then 
+    delete_snmp_conn $id
+    exit
+fi

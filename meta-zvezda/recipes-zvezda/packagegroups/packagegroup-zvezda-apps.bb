@@ -50,4 +50,5 @@ RDEPENDS:${PN}-system = " \
         phosphor-post-code-manager \
         phosphor-host-postd \
         intel-ipmi-oem \
+        snmpctl \
         "
