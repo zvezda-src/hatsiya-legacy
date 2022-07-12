@@ -246,7 +246,7 @@ inherit extrausers
 
 # This is the default password for the OpenBMC root user account (very difficult)
 # salted and hashed with SHA512 suitable for /etc/shadow or `usermod -p`.
-DEFAULT_OPENBMC_PASSWORD = "'$6$FQY4stUGo$Rb4Wz3m84SWjknc39tN86HuThcroxMyaWyr9401v/WdkCEmZWBb.uqU7sllGyLmFn04m1T5cby1/dOPo6poew0'"
+DEFAULT_OPENBMC_PASSWORD = "'\$6\$FQY4stUGo\$Rb4Wz3m84SWjknc39tN86HuThcroxMyaWyr9401v/WdkCEmZWBb.uqU7sllGyLmFn04m1T5cby1/dOPo6poew0'"
 
 EXTRA_USERS_PARAMS:pn-obmc-phosphor-image = " \
   usermod -p ${DEFAULT_OPENBMC_PASSWORD} root; \
