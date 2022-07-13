@@ -3,4 +3,4 @@ Description=Boardinfo setter
 
 [Service]
 ExecStart=/usr/bin/boardinfo
-Type=simple
+Type=one-shot

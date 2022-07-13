@@ -14,11 +14,12 @@ inherit allarch
 SRC_URI = "\
     file://set-gpios \
     file://set-gpios.service \
+    file://set-gpios.timer \
     "
 
 inherit obmc-phosphor-systemd
 
-SYSTEMD_SERVICE:${PN} += "set-gpios.service"
+SYSTEMD_SERVICE:${PN} += "set-gpios.service set-gpios.timer"
 
 do_install() {
     install -d ${D}${bindir}

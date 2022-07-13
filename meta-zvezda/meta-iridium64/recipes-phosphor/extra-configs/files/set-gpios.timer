@@ -1,0 +1,9 @@
+[Unit]
+Description=Set configuration gpios
+
+[Timer]
+OnBootSec=0sec
+Unit=set-gpios.service
+
+[Install]
+WantedBy=multi-user.target
