@@ -8,8 +8,6 @@ DHCP=ipv6
 DHCPv6Client=true
 [Address]
 Address=192.168.8.23/24
-[Route]
-Gateway=192.168.8.1
 [DHCP]
 ClientIdentifier=mac
 UseDNS=true
