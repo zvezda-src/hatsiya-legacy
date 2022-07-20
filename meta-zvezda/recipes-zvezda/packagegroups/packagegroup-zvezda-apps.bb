@@ -22,7 +22,7 @@ RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
 
 SUMMARY:${PN}-chassis = "Zvezda Chassis"
 RDEPENDS:${PN}-chassis = " \
-        pwr-ctrl \                
+        buttons-ctrl \                
         "
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
@@ -37,8 +37,7 @@ SUMMARY:${PN}-system = "Zvezda System"
 RDEPENDS:${PN}-system = " \
 	phosphor-hwmon \
 	webui-vue \
-	uidled \
-        libpeci \
+	libpeci \
         entity-manager \
         fan-control \
         set-gpios \
