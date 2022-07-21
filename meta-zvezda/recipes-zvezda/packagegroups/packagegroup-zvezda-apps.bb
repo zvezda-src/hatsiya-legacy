@@ -22,7 +22,7 @@ RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
 
 SUMMARY:${PN}-chassis = "Zvezda Chassis"
 RDEPENDS:${PN}-chassis = " \
-        buttons-ctrl \                
+        pwr-ctrl \                
         "
 
 SUMMARY:${PN}-fans = "Zvedza Fans"

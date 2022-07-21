@@ -9,8 +9,8 @@ OBMC_MACHINE_FEATURES += "\
         "
 
 VIRTUAL-RUNTIME_skeleton_workbook = "${MACHINE}-config"
-VIRTUAL-RUNTIME_obmc-host-state-manager ?= "buttons-ctrl"
-VIRTUAL-RUNTIME_obmc-chassis-state-manager ?= "buttons-ctrl"
+VIRTUAL-RUNTIME_obmc-host-state-manager ?= "pwr-ctrl"
+VIRTUAL-RUNTIME_obmc-chassis-state-manager ?= "pwr-ctrl"
 
 
 PREFERRED_PROVIDER:virtual/obmc-chassis-mgmt = "packagegroup-zvezda-apps"
