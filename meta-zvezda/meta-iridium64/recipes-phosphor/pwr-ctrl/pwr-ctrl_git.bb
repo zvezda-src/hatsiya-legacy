@@ -1,8 +1,8 @@
 SUMMARY = "Little buttons control demon supports on/off server and uid led"
 DESCRIPTION = "Little buttons control demon supports on/off server and uid led"
 
-SRC_URI = "git://github.com/niikitta/buttons-ctrl;branch=dev2;protocol=https"
-SRCREV = "6833d6cffe7e3ebf12427a190d9d9143f41d1ae3"
+SRC_URI = "git://github.com/niikitta/buttons-ctrl;branch=dev3;protocol=https"
+SRCREV = "2a330408b6ba6f757b0c75cdf5968db178a14cf7"
 
 PV = "1.0+git${SRCPV}"
 
