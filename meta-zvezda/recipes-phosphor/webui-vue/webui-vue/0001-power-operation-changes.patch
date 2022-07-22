@@ -1,34 +1,34 @@
-From 9aa63527cbbfbe0f2497598ea20d1c45d0346102 Mon Sep 17 00:00:00 2001
+From 8089d78349dab554d6a036336e69614990ef6642 Mon Sep 17 00:00:00 2001
 From: Nikita Pavlov <“niikitta@yahoo.com”>
-Date: Tue, 19 Jul 2022 19:39:21 +0300
-Subject: [PATCH] power operations changing
+Date: Fri, 22 Jul 2022 11:13:36 +0300
+Subject: [PATCH] power operation changes
 
-remove power reboot for test and add power off
 ---
  .../ServerPowerOperations/ServerPowerOperations.vue       | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue b/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
-index 9e03083..7674a75 100644
+index 9e03083..973d48a 100644
 --- a/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
 +++ b/src/views/Operations/ServerPowerOperations/ServerPowerOperations.vue
-@@ -78,7 +78,7 @@
-             </b-button>
-           </template>
-           <template v-else>
--            <!-- Reboot server options -->
-+            <!-- Reboot server options 
-             <b-form novalidate class="mb-5" @submit.prevent="rebootServer">
+@@ -83,14 +83,14 @@
                <b-form-group
                  :label="$t('pageServerPowerOperations.rebootServer')"
-@@ -107,20 +107,20 @@
                >
-                 {{ $t('pageServerPowerOperations.reboot') }}
-               </b-button>
--            </b-form>
-+            </b-form>-->
-             <!-- Shutdown server options -->
-             <b-form novalidate @submit.prevent="shutdownServer">
+-                <b-form-radio
++                <!--<b-form-radio
+                   v-model="form.rebootOption"
+                   name="reboot-option"
+                   data-test-id="serverPowerOperations-radio-rebootOrderly"
+                   value="orderly"
+                 >
+                   {{ $t('pageServerPowerOperations.orderlyReboot') }}
+-                </b-form-radio>
++                </b-form-radio>-->
+                 <b-form-radio
+                   v-model="form.rebootOption"
+                   name="reboot-option"
+@@ -113,14 +113,14 @@
                <b-form-group
                  :label="$t('pageServerPowerOperations.shutdownServer')"
                >
