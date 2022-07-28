@@ -50,4 +50,5 @@ RDEPENDS:${PN}-system = " \
         phosphor-host-postd \
         intel-ipmi-oem \
         snmpctl \
+        smbios-mdr \
         "
