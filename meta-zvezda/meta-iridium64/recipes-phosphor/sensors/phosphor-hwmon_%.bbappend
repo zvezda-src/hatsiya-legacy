@@ -12,6 +12,8 @@ ITEMSFMT = "ahb/apb/{0}.conf"
 
 ITEMS = "${@compose_list(d, 'ITEMSFMT', 'CHIPS')}"
 
+ITEMS += "iio-hwmon.conf"
+
 ENVS = "obmc/hwmon/{0}"
 SYSTEMD_ENVIRONMENT_FILE:${PN}:append:iridium64 := "${@compose_list(d, 'ENVS', 'ITEMS')}"
 
@@ -25,7 +27,3 @@ PECIITEMSFMT = "devices/platform/ahb/ahb--apb/ahb--apb--bus@1e78b000/1e78b000.pe
 PECIITEMS = "${@compose_list(d, 'PECIITEMSFMT', 'PECINAMES')}"
 PECIENVS = "obmc/hwmon/{0}"
 SYSTEMD_ENVIRONMENT_FILE:${PN}:append:iridium64 = " ${@compose_list(d, 'PECIENVS', 'PECIITEMS')}"
-
-IIOITEMS = "devices/platform/iio-hwmon.conf"
-IIOENVS = "obmc/hwmon/{0}"
-SYSTEMD_ENVIRONMENT_FILE:${PN}:append:iridium64 = " ${@compose_list(d, 'IIOENVS', 'IIOITEMS')}"
