@@ -52,4 +52,5 @@ RDEPENDS:${PN}-system = " \
         snmpctl \
         peci-pcie \
         smbios-mdr \
+        phosphor-misc-http-redirect-awk \
         "
