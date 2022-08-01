@@ -22,3 +22,5 @@ DEPENDS += " \
         sdbusplus \
         libgpiod \
         "
+
+FILES:${PN}  += "${systemd_system_unitdir}/pwr-ctrl.service"
