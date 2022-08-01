@@ -53,4 +53,5 @@ RDEPENDS:${PN}-system = " \
         peci-pcie \
         smbios-mdr \
         phosphor-misc-http-redirect-awk \
+        iio-hwmon \
         "
