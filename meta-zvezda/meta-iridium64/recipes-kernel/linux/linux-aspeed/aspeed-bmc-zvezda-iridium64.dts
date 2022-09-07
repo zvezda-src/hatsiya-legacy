@@ -57,6 +57,22 @@
 		io-channels = <&adc 0>, <&adc 1>, <&adc 2>, <&adc 3>,
 		              <&adc 4>, <&adc 5>, <&adc 6>, <&adc 7>;
 	};
+	leds {
+		compatible = "gpio-leds";
+
+		enclosure_identify {
+			label = "rear_id";
+			default-state = "off";
+			gpios = <&gpio ASPEED_GPIO(H, 6) GPIO_ACTIVE_LOW>;
+		};
+
+		enclosure_fault {
+			label = "front_fault";
+			default-state = "off";
+			gpios = <&gpio ASPEED_GPIO(D, 7) GPIO_ACTIVE_LOW>;
+		};
+
+	};
 };
 
 &fmc {
