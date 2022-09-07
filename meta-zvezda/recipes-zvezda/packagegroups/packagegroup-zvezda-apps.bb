@@ -39,6 +39,7 @@ RDEPENDS:${PN}-system = " \
 	phosphor-hwmon \
 	webui-vue \
 	libpeci \
+	button-ctrl \
         entity-manager \
         fan-control \
         set-gpios \
