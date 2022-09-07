@@ -42,8 +42,6 @@ RDEPENDS:${PN}-system = " \
 	button-ctrl \
         entity-manager \
         fan-control \
-        set-gpios \
-        set-version \
         boardinfo \
         ipmitool \
         phosphor-hostlogger \

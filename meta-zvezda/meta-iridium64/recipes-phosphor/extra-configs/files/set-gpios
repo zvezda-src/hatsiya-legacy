@@ -1,6 +1,0 @@
-#! /bin/bash
-
-if [ -n /dev/gpiochip0 ]; then
-    echo "Set GPIOZ7 to 0"
-    gpioset gpiochip0 207=0
-fi

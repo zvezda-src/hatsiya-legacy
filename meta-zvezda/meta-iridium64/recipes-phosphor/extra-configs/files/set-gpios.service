@@ -1,6 +1,0 @@
-[Unit]
-Description=Set configuration gpios
-
-[Service]
-ExecStart=/usr/bin/set-gpios
-Type=one-shot
