@@ -57,27 +57,8 @@
 		io-channels = <&adc 0>, <&adc 1>, <&adc 2>, <&adc 3>,
 		              <&adc 4>, <&adc 5>, <&adc 6>, <&adc 7>;
 	};
-	
-	leds {
-		compatible = "gpio-leds";
-
-		enclosure_identify {
-			label = "rear_id";
-			default-state = "off";
-			gpios = <&gpio ASPEED_GPIO(H, 6) GPIO_ACTIVE_LOW>;
-		};
-
-		enclosure_fault {
-			label = "front_fault";
-			default-state = "off";
-			gpios = <&gpio ASPEED_GPIO(D, 7) GPIO_ACTIVE_LOW>;
-		};
-
-	};
 };
 
-
-	
 &fmc {
 	status = "okay";
 	flash@0 {
@@ -87,28 +68,14 @@
 	};
 };
 
-//&spi1 {
-//	status = "okay";
-//	pinctrl-names = "default";
-//	pinctrl-0 = <&pinctrl_spi1_default>;
-//	flash@0 {
-//		status = "okay";
-//		m25p,fast-read;
-//		label = "pnor";
-//	};
-//};
-
 &spi1 {
 	status = "okay";
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_spi2ck_default
-			&pinctrl_spi2miso_default
-			&pinctrl_spi2mosi_default
-			&pinctrl_spi2cs0_default>;
+	pinctrl-0 = <&pinctrl_spi1_default>;
 	flash@0 {
 		status = "okay";
-		label = "bios";
 		m25p,fast-read;
+		label = "pnor";
 	};
 };
 
@@ -137,16 +104,19 @@
 
 &gpio {
 	status = "okay";
-//	pinctrl-names = "pass-through";
-//	pinctrl-0 = <&pinctrl_gpid0_default
-//		     &pinctrl_gpid2_default>;
+	pinctrl-names = "pass-through";
+    pinctrl-0 = <&pinctrl_gpid0_default
+                    &pinctrl_gpid2_default>;
+
+
 	gpio-line-names =
 	/*A0-A7*/	"","","","","","","","",
 	/*B0-B7*/	"","","","","","","","",
 	/*C0-C7*/	"","","","","","","","",
-	/*D0-D7*/	"POWER_BUTTON","POWER_OUT","RESET_BUTTON","RESET_OUT","NMI_BUTTON","NMI_OUT","PS_PWROK","",
+	/*D0-D7*/	"POWER_BUTTON","POWER_OUT","RESET_BUTTON","RESET_OUT",
+			"NMI_BUTTON","NMI_OUT","PS_PWROK","",
 	/*E0-E7*/	"","","","","","","","",
-	/*F0-F7*/	"","","","_SW_SELECT","","","","",
+	/*F0-F7*/	"","","","SPI_SW_SELECT","","","","",
 	/*G0-G7*/	"","","","","","","","",
 	/*H0-H7*/	"","","","","ID_BUTTON","","UID_LED","",
 	/*I0-I7*/	"","","","","","","","",
@@ -165,14 +135,12 @@
 	/*V0-V7*/	"","","","","","","","",
 	/*W0-W7*/	"","","","","","","","",
 	/*X0-X7*/	"","","","","","","","",
-	/*Y0-Y7*/	"SIO_S3","SIO_S5","","SIO_ONCONTROL","","","","",
+	/*Y0-Y7*/	"","SIO_S5","","SIO_ONCONTROL","","","","",
 	/*Z0-Z7*/	"","SIO_POWER_GOOD","","","","","","",
 	/*AA0-AA7*/	"","","","","","","","",
 	/*AB0-AB7*/	"POST_COMPLETE","","","","","","","",
 	/*AC0-AC7*/	"","","","","","","","";
 };
-
-
 
 &mac0 {
 	status = "okay";
@@ -180,21 +148,10 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_rgmii1_default &pinctrl_mdio1_default>;
 	phy-mode = "rgmii";
-//	phy-handle = <&phy>;
-//	mdio {
-//		#address-cells = <1>;
-//		#size-cells = <0>;
-//
-//		phy: ethernet-phy@0 {
-//			/* RTL8211E */
-//			compatible = "ethernet-phy-id0007.0032", "ethernet-phy-ieee802.3-c45", "ethernet-phy-ieee802.3-c22";
-//			reg = <0>;
-//		};
-//	};
 };
 
 &mac1 {
-//	status = "okay";
+//	status = "okay"; //Deleted because of bugs of WebUI with two and more LANs
 
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_rgmii2_default>;
@@ -218,7 +175,6 @@
 };
 
 &i2c0 {
-	/* IPMB_STBY */
 	status = "okay";
 	ipmb0@10 {
 		compatible = "ipmb-dev";
@@ -230,36 +186,6 @@
 
 &i2c1 {
 	status = "okay";
-	i2c_pe0: i2c@0 {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            reg = <0>;
-        };
-        i2c_pe1: i2c@1 {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            reg = <1>;
-        };
-        i2c_pe2: i2c@2 {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            reg = <2>;
-        };
-        i2c_pe3: i2c@3 {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            reg = <3>;
-        };
-        i2c_pe4: i2c@4 {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            reg = <4>;
-        };
-        i2c_pe5: i2c@5 {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            reg = <5>;
-        };
 };
 
 &i2c2 {
@@ -294,26 +220,6 @@
 
 &i2c5 {
 	status = "okay";
-	i2c-switch@77 {
-        	compatible = "nxp,pca9541";
-        	reg = <0x77>;
-        	#address-cells = <1>;
-        	#size-cells = <0>;
-        	i2c-mux-idle-disconnect;
-
-        	i2c_pmbus0: i2c@68 {
-        		compatible = "pmbus";
-            		#address-cells = <1>;
-            		#size-cells = <0>;
-            		reg = <68>;
-        	};
-        	i2c_pmbus1: i2c@69 {
-        		compatible = "pmbus";
-            		#address-cells = <1>;
-            		#size-cells = <0>;
-            		reg = <69>;
-        	};
-    };
 };
 
 &i2c6 {
@@ -324,18 +230,13 @@
 	status = "okay";
 };
 
-&i2c8 {	
+&i2c8 {
 	status = "okay";
 };
 
 &i2c9 {
 	status = "okay";
 };
-
-&i2c10 {
-//MPS VR Disabledintel pch 621a i2c
-};
-
 
 &vuart {
         status = "okay";
@@ -359,7 +260,8 @@
 				&pinctrl_pwm2_default
 				&pinctrl_pwm3_default
 				&pinctrl_pwm4_default
-				&pinctrl_pwm5_default>;
+				&pinctrl_pwm5_default
+				&pinctrl_pwm6_default>;
 
 	fan@0 {
 		reg = <0x00>;
@@ -367,27 +269,32 @@
 	};
 
 	fan@1 {
-		reg = <0x01>;
+		reg = <0x00>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x01>;
 	};
 
 	fan@2 {
-		reg = <0x02>;
+		reg = <0x01>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x02>;
 	};
 
 	fan@3 {
-		reg = <0x03>;
+		reg = <0x01>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x03>;
 	};
 
 	fan@4 {
-		reg = <0x04>;
+		reg = <0x02>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x04>;
 	};
 
 	fan@5 {
-		reg = <0x05>;
+		reg = <0x02>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x05>;
+	};
+
+	fan@6 {
+		reg = <0x03>;
+		aspeed,fan-tach-ch = /bits/ 8 <0x06>;
 	};
 };
