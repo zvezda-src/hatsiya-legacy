@@ -1,6 +1,6 @@
 FILESEXTRAPATHS:prepend:iridium64 := "${THISDIR}/${PN}:"
 
-EXTRA_OEMESON:append:iridium64 = " -Dnegative-errno-on-fail=true"
+EXTRA_OEMESON:append:iridium64 = " -Dupdate-functional-on-fail=true -Dnegative-errno-on-fail=false"
 
 CHIPS = " \
         bus@1e78a000/i2c-bus@100/lm95241@19 \
