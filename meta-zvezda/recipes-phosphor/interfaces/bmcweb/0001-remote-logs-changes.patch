@@ -1,0 +1,2918 @@
+diff -r -u --new-file a/meson.build b/meson.build
+--- a/meson.build	2022-09-04 17:05:53.751780768 +0300
++++ b/meson.build	2022-09-06 20:31:11.010053768 +0300
+@@ -263,7 +263,8 @@
+ 
+ systemd = dependency('systemd')
+ zlib = dependency('zlib')
+-bmcweb_dependencies += [systemd, zlib]
++snmp = dependency('phosphor-snmp')
++bmcweb_dependencies += [systemd, zlib, snmp]
+ 
+ if cxx.has_header('nlohmann/json.hpp')
+     nlohmann_json = declare_dependency()
+diff -r -u --new-file a/redfish-core/include/event_service_manager.hpp b/redfish-core/include/event_service_manager.hpp
+--- a/redfish-core/include/event_service_manager.hpp	2022-09-04 17:05:53.755780733 +0300
++++ b/redfish-core/include/event_service_manager.hpp	2022-09-06 20:31:11.014053736 +0300
+@@ -20,8 +20,22 @@
+ #include "registries/openbmc_message_registry.hpp"
+ #include "registries/task_event_message_registry.hpp"
+ 
++#include <unistd.h>
++#include <sys/wait.h>
++#include <sys/prctl.h>
++#include <signal.h>
++#include <stdlib.h>
++#include <string.h>
++#include <stdio.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <errno.h>
++#include <poll.h>
++
+ #include <sys/inotify.h>
+ 
++#include <boost/filesystem.hpp>
++#include <sys/stat.h>
+ #include <boost/asio/io_context.hpp>
+ #include <boost/container/flat_map.hpp>
+ #include <dbus_utility.hpp>
+@@ -33,14 +47,41 @@
+ #include <server_sent_events.hpp>
+ #include <utils/json_utils.hpp>
+ 
++#include <iostream>
+ #include <cstdlib>
+ #include <ctime>
+ #include <fstream>
+ #include <memory>
+ #include <span>
++#include <string>
++#include <vector>
++#include <tuple>
++
++#if 1
++//#include <phosphor-logging/elog-errors.hpp>
++#include <phosphor-logging/elog.hpp>
++#include <phosphor-logging/log.hpp>
++#include <snmp.hpp>
++#include <snmp_notification.hpp>
++#include <xyz/openbmc_project/Common/error.hpp>
++#include <xyz/openbmc_project/Logging/Entry/server.hpp>
++#endif
+ 
+ namespace redfish
+ {
++extern nlohmann::json remoteConfigList;
++extern std::mutex remoteConfigListLock;
++extern nlohmann::json remoteEmailConfigList;
++extern std::mutex remoteEmailConfigListLock;
++extern nlohmann::json remoteSNMPConfigList;
++extern std::mutex remoteSNMPConfigListLock;
++
++//#define SNIK_DEB_OUT(str) std::cout << str << std::endl
++#define SNIK_DEB_OUT(str)
++//#define SNIK_DEB_OUT1(str) std::cout << str << std::endl
++#define SNIK_DEB_OUT1(str)
++//#define MAX_EVENT_COUNT 40
++#define MAX_EVENT_COUNT 10000
+ 
+ using ReadingsObjType =
+     std::vector<std::tuple<std::string, std::string, double, int32_t>>;
+@@ -81,6 +122,101 @@
+ static int dirWatchDesc = -1;
+ static int fileWatchDesc = -1;
+ 
++#if 1
++static constexpr const char* webEventLogDir = "/var/lib/redfish";
++static const std::string webEventLogFilename = "redfish-";
++static constexpr const char* webEventLogFilePrefix = "/var/lib/redfish/redfish-";
++
++using EventFileInfo = std::tuple<std::filesystem::path, std::filesystem::file_time_type, std::string, std::string>;
++extern std::vector<EventFileInfo> eventFileInfoList;
++extern std::mutex eventFileInfoListLock;
++
++inline bool getIdEventFileInfo( const std::filesystem::path &file, std::string &idStr )
++{
++    std::string fname( file.string());
++    size_t id_beg = fname.find( webEventLogFilename );
++    if( id_beg == std::string::npos )
++        return( false );
++    id_beg += webEventLogFilename.size();
++    size_t id_end = fname.find( "-", id_beg );
++    size_t id_len = id_end;
++    if( id_len != std::string::npos )
++        id_len = id_end - id_beg;
++    idStr = fname.substr( id_beg, id_len );
++    return( true );
++}
++
++inline bool loadEventFileInfoList( std::vector<EventFileInfo> &eventFileInfoList )
++{
++    eventFileInfoListLock.lock();
++
++    mkdir( webEventLogDir, 0755 );
++    auto dirIter = std::filesystem::directory_iterator(webEventLogDir);
++    for (auto& entry : dirIter)
++    {
++        if (entry.is_regular_file())
++        {
++            std::string idStr;
++            if( !getIdEventFileInfo( entry.path(), idStr ))
++                continue;
++
++            std::ifstream logStream(entry.path());
++            if (logStream.is_open())
++            {
++                std::string logEntry;
++                if(std::getline(logStream, logEntry))
++                {
++                    eventFileInfoList.emplace_back(EventFileInfo{entry.path(), entry.last_write_time(), idStr, logEntry});
++                }
++            }
++        }
++    }
++
++    std::sort(std::begin(eventFileInfoList), std::end(eventFileInfoList), 
++        [](EventFileInfo &a, EventFileInfo &b) { return std::get<1>(a) < std::get<1>(b); });
++
++    //for (auto f : file_vect)
++    //{
++    //    SNIK_DEB_OUT( std::get<0>(f) );
++    //}
++    eventFileInfoListLock.unlock();
++
++    return( true );
++}
++
++inline bool addToEventFileInfoList( std::vector<EventFileInfo> &eventFileInfoList, size_t maxFiles, const std::string &idStr, const std::string &entry )
++{
++    //mkdir( webEventLogDir, 0755 );
++    std::filesystem::path dstFile = webEventLogFilePrefix + idStr;
++SNIK_DEB_OUT( "addToEventFileInfoList create file " << dstFile );
++    std::ofstream webEventFile(dstFile);
++    if( !webEventFile.good())
++    {
++SNIK_DEB_OUT( "addToEventFileInfoList cannot create " << dstFile );
++        return false;
++    }  
++    webEventFile << entry << std::endl;
++    webEventFile.close();
++
++    eventFileInfoListLock.lock();
++    eventFileInfoList.emplace_back(EventFileInfo{dstFile, std::filesystem::last_write_time( dstFile ), idStr, entry});
++    if( eventFileInfoList.size() > maxFiles )
++    {
++        auto for_remove = eventFileInfoList.size() - static_cast<size_t>(maxFiles);
++        while( for_remove-- )
++        {
++            std::filesystem::path event_file = std::get<0>(eventFileInfoList[ 0]);
++SNIK_DEB_OUT( "Remove event " << event_file );
++            eventFileInfoList.erase( eventFileInfoList.begin());
++            std::filesystem::remove( event_file );
++        }
++    }
++    eventFileInfoListLock.unlock();
++
++    return true;
++}
++#endif
++
+ // <ID, timestamp, RedfishLogId, registryPrefix, MessageId, MessageArgs>
+ using EventLogObjectsType =
+     std::tuple<std::string, std::string, std::string, std::string, std::string,
+@@ -1087,8 +1223,649 @@
+         BMCWEB_LOG_DEBUG << "Next Log Position : " << redfishLogFilePosition;
+     }
+ 
++    bool sendEmail( const std::string &MAIL_SERVER, const int MAIL_PORT, const std::string &MAIL_USER,
++                    const std::string &MAIL_FROM, const std::string &MAIL_TO, const std::string &MAIL_PASSWORD,
++                    const std::string &MAIL_SUBJECT, const std::string &MAIL_TEXT )
++    {
++        pid_t pid = 0;
++        int inpipefd[2];
++        int outpipefd[2];
++        char buf[256];
++        int status;
++
++        const char *email_sender_name = "/usr/bin/msmtp";
++        const std::string MAIL_DATE = "date +\"%d %b %Y %T\"";
++
++        //fflush( stdout );
++        //fflush( stderr );
++
++        if( pipe(inpipefd) || pipe(outpipefd))
++        {
++            SNIK_DEB_OUT( "sendEmail cannot create pipe" );
++            return( false );
++        }
++
++        pid = fork();
++        if (pid == 0)
++        {
++            close(outpipefd[1]);
++            close(inpipefd[0]);
++            dup2(outpipefd[0], STDIN_FILENO);
++            dup2(inpipefd[1], STDOUT_FILENO);
++            dup2(inpipefd[1], STDERR_FILENO);
++            close(outpipefd[0]);
++            close(inpipefd[1]);
++
++            //ask kernel to deliver SIGTERM in case the parent dies
++            prctl(PR_SET_PDEATHSIG, SIGTERM);
++
++            const std::string argv_email_sender[] = {
++                "--host=" + MAIL_SERVER,
++                "--port=" + std::to_string( MAIL_PORT ),
++                "--tls=on",
++                "--tls-certcheck=off",
++                "--tls-starttls=on",
++                "--auth=login",
++                "--user=" + MAIL_USER,
++                "--passwordeval=echo " + MAIL_PASSWORD,
++                "--timeout=3",
++                "-f",
++                MAIL_FROM,
++                MAIL_TO,
++                "--debug"
++            };
++
++            const int argv_number = sizeof( argv_email_sender )/sizeof( argv_email_sender[ 0] );
++            const char **argv_email_sender_c = new const char* [ argv_number+2 ];
++            argv_email_sender_c[ 0] = email_sender_name;
++            for (int i = 0;  i < argv_number;  ++i)
++                argv_email_sender_c[ i+1 ] = argv_email_sender[ i] .c_str();
++
++            argv_email_sender_c[ argv_number+1 ] = NULL;
++            execv (email_sender_name, const_cast<char **>(argv_email_sender_c));
++            exit(1);
++        }
++        else
++        if (pid < 0)
++        {
++            SNIK_DEB_OUT( "sendEmail cannot fork " );
++            return( false );
++        }
++
++        close(outpipefd[0]);
++        close(inpipefd[1]);
++
++        std::string email_msg = "Date: " + MAIL_DATE +
++            "\nFrom: " + MAIL_FROM +
++            "\nTo: " + MAIL_TO +
++            "\nSubject: " + MAIL_SUBJECT +
++            "\nContent-Type: text/plain; charset=UTF-8"
++            "\n\n" + MAIL_TEXT;
++        const char *msg = email_msg.c_str();
++        size_t len = email_msg.size();
++        ssize_t len1 = static_cast<ssize_t>(len);
++        if( write(outpipefd[1], msg, len) != len1 )
++        {
++            SNIK_DEB_OUT( "sendEmail cannot send message to email sender" );
++            return( -3);
++        }
++
++        close(outpipefd[1]);
++   
++        int timeout = 5000000;
++        struct timeval t;
++        t.tv_sec = timeout/1000000;
++        t.tv_usec = timeout%1000000;
++
++        fd_set read_set, err_set;
++        FD_ZERO( &read_set );
++        FD_ZERO( &err_set );
++        while( 1)
++        {
++            int n = inpipefd[0];
++            FD_SET( inpipefd[0], &read_set );
++            FD_SET( inpipefd[0], &err_set );
++
++            int res = select( n+1, &read_set, NULL, &err_set, &t );
++            if( res == 0 )
++            {
++    	        //printf( "timeout\n" );
++                //t.tv_sec = timeout/1000000;
++                //t.tv_usec = timeout%1000000;
++                break;
++            }
++            else
++            if( res > 0 )
++            {
++            	//printf( "check ready read\n" );
++                if( FD_ISSET( inpipefd[0], &read_set ))
++                {
++                    //printf( "ready read fd=%d\n", inpipefd[0] );
++                    FD_CLR( inpipefd[0], &read_set );
++                    res = read( inpipefd[0], buf, sizeof( buf )-1 );
++                    //printf( "read %d\n", res );
++                    if( res > 0 )
++                    {
++                        //printf( "read %d bytes\n", res );
++                        //buf[ res ] = 0;
++                        //printf("recv(%d) : %s", res, buf );
++                    }
++                    else
++                    if( res == 0 )
++                    {
++                    	//printf( "pipe is closed\n" );
++                        break;
++                    }
++                    else
++                    {
++               	        //printf( "res=%d break\n", res );
++                        break;
++                    }
++                }
++                if( FD_ISSET( inpipefd[0], &err_set ))
++                {
++    	            //printf( "pipe error\n" );
++                    break;
++                }
++            }
++        }
++
++        kill(pid, SIGKILL); //send SIGKILL signal to the child process
++        waitpid(pid, &status, 0);
++        int res = WEXITSTATUS(status);
++        if( res != 0 )
++        {
++            SNIK_DEB_OUT( "sendEmail failed code=" << res );
++        }
++        return( res == 0 ? true : false );
++    }
++
++    bool sendSNMP( uint32_t errorID, uint64_t timestamp, const std::string &server, int serverPort, int32_t isev, const std::string &message )
++    {
++        SNIK_DEB_OUT( "sendSNMP1" );
++
++#if 1
++//        using namespace phosphor::logging;
++//        using namespace sdbusplus::xyz::openbmc_project::Logging::server;
++        using namespace phosphor::network::snmp;
++        using InternalFailure =
++            sdbusplus::xyz::openbmc_project::Common::Error::InternalFailure;
++
++        SNIK_DEB_OUT( "sendSNMP2 server=" << server );
++        SNIK_DEB_OUT( "sendSNMP2 serverPort=" << serverPort );
++        SNIK_DEB_OUT( "sendSNMP2 message=" << message );
++
++        try
++        {
++            std::string peername = server + ":" + std::to_string( serverPort );
++            sendTrapToServer<OBMCErrorNotification>(peername, errorID, timestamp, isev, message);
++        }
++        catch (const InternalFailure& e)
++        {
++//          log<level::INFO>(
++//              "Failed to send SNMP trap",
++//              phosphor::logging::entry("ERROR_ID=%d", errorID),
++//              phosphor::logging::entry("TIMESTAMP=%llu", timestamp),
++//              phosphor::logging::entry("SEVERITY=%s", severity ),
++//              phosphor::logging::entry("MESSAGE=%s", message.c_str()));
++            SNIK_DEB_OUT( "sendTrapToServer failed !!!!" );
++            return( false );
++        }
++
++        SNIK_DEB_OUT( "sendTrapToServer done !!!!" );
++        return( true );
++#endif
++
++#if 0
++        std::string severity_str = "xyz.openbmc_project.Logging.Entry.Level.";
++        if( severity == "Info" )
++            severity_str += "Informational";
++        else
++        if( severity == "Warning" )
++            severity_str += "Warning";
++        else
++        if( severity == "Critical" || severity == "Error" )
++            severity_str += "Error";
++        else
++            return( false );
++
++        SNIK_DEB_OUT( "sendSNMP2 severity_str=" << severity_str );
++        SNIK_DEB_OUT( "sendSNMP2 message=" << message );
++        bool res = false;
++
++        auto respHandler = [&res](const boost::system::error_code ec)
++        {
++            SNIK_DEB_OUT( "sendSNMP responce" );
++            if (ec)
++            {
++                SNIK_DEB_OUT( "sendSNMP failed code=" << ec );
++                res = false;
++                return;
++            }
++            res = true;
++        };
++
++#if 1
++        crow::connections::systemBus->async_method_call(
++            respHandler, "xyz.openbmc_project.Logging",
++            "/xyz/openbmc_project/logging",
++            "xyz.openbmc_project.Logging.Create",
++            "Create",
++            //"ssa{ss}",
++            message,
++            severity_str,
++            "0");
++#endif
++#if 0
++            crow::connections::systemBus->async_method_call(
++                    respHandler, "xyz.openbmc_project.Logging",
++                    "/xyz/openbmc_project/logging/entry/1",
++                    "xyz.openbmc_project.Object.Delete", "Delete");
++#endif
++        return( res );
++#endif
++
++
++#if 0
++        std::string severity_str = "xyz.openbmc_project.Logging.Entry.Level.";
++        if( severity == "Info" )
++            severity_str += "Informational";
++        else
++        if( severity == "Warning" )
++            severity_str += "Warning";
++        else
++        if( severity == "Critical" || severity == "Error" )
++            severity_str += "Error";
++        else
++            return( false );
++
++        SNIK_DEB_OUT( "sendSNMP2 severity_str=" << severity_str );
++        SNIK_DEB_OUT( "sendSNMP2 message=" << message );
++
++        pid_t pid = 0;
++        int inpipefd[2];
++        int outpipefd[2];
++        char buf[256];
++        int status;
++
++        const char *snmp_sender_name = "/usr/bin/busctl";
++
++        //fflush( stdout );
++        //fflush( stderr );
++
++        if( pipe(inpipefd) || pipe(outpipefd))
++        {
++            SNIK_DEB_OUT( "sendSNMP cannot create pipe" );
++            return( false );
++        }
++
++        pid = fork();
++        if (pid == 0)
++        {
++            close(outpipefd[1]);
++            close(inpipefd[0]);
++            dup2(outpipefd[0], STDIN_FILENO);
++            dup2(inpipefd[1], STDOUT_FILENO);
++            dup2(inpipefd[1], STDERR_FILENO);
++            close(outpipefd[0]);
++            close(inpipefd[1]);
++
++            //ask kernel to deliver SIGTERM in case the parent dies
++            prctl(PR_SET_PDEATHSIG, SIGTERM);
++
++            const std::string argv_snmp_sender[] = {
++                "call",
++                "xyz.openbmc_project.Logging",
++                "/xyz/openbmc_project/logging",
++                "xyz.openbmc_project.Logging.Create",
++                "Create",
++                "ssa{ss}",
++                message,
++                severity_str,
++                "0"
++            };
++
++            const int argv_number = sizeof( argv_snmp_sender )/sizeof( argv_snmp_sender[ 0] );
++            const char **argv_snmp_sender_c = new const char* [ argv_number+2 ];
++            argv_snmp_sender_c[ 0] = snmp_sender_name;
++            for (int i = 0;  i < argv_number;  ++i)
++                argv_snmp_sender_c[ i+1 ] = argv_snmp_sender[ i] .c_str();
++
++            argv_snmp_sender_c[ argv_number+1 ] = NULL;
++            execv (snmp_sender_name, const_cast<char **>(argv_snmp_sender_c));
++            exit(1);
++        }
++        else
++        if (pid < 0)
++        {
++            SNIK_DEB_OUT( "sendSNMP cannot fork " );
++            return( false );
++        }
++
++        close(outpipefd[0]);
++        close(inpipefd[1]);
++
++        close(outpipefd[1]);
++   
++        int timeout = 5000000;
++        struct timeval t;
++        t.tv_sec = timeout/1000000;
++        t.tv_usec = timeout%1000000;
++
++        fd_set read_set, err_set;
++        FD_ZERO( &read_set );
++        FD_ZERO( &err_set );
++        while( 1)
++        {
++            int n = inpipefd[0];
++            FD_SET( inpipefd[0], &read_set );
++            FD_SET( inpipefd[0], &err_set );
++
++            int res = select( n+1, &read_set, NULL, &err_set, &t );
++            if( res == 0 )
++            {
++    	        //printf( "timeout\n" );
++                //t.tv_sec = timeout/1000000;
++                //t.tv_usec = timeout%1000000;
++                break;
++            }
++            else
++            if( res > 0 )
++            {
++            	//printf( "check ready read\n" );
++                if( FD_ISSET( inpipefd[0], &read_set ))
++                {
++                    //printf( "ready read fd=%d\n", inpipefd[0] );
++                    FD_CLR( inpipefd[0], &read_set );
++                    res = read( inpipefd[0], buf, sizeof( buf )-1 );
++                    //printf( "read %d\n", res );
++                    if( res > 0 )
++                    {
++                        //printf( "read %d bytes\n", res );
++                        //buf[ res ] = 0;
++                        //printf("recv(%d) : %s", res, buf );
++                    }
++                    else
++                    if( res == 0 )
++                    {
++                    	//printf( "pipe is closed\n" );
++                        break;
++                    }
++                    else
++                    {
++               	        //printf( "res=%d break\n", res );
++                        break;
++                    }
++                }
++                if( FD_ISSET( inpipefd[0], &err_set ))
++                {
++    	            //printf( "pipe error\n" );
++                    break;
++                }
++            }
++        }
++
++        kill(pid, SIGKILL); //send SIGKILL signal to the child process
++        waitpid(pid, &status, 0);
++        int res = WEXITSTATUS(status);
++        if( res != 0 )
++        {
++            SNIK_DEB_OUT( "sendSNMP failed code=" << res );
++        }
++        return( res == 0 ? true : false );
++#endif
++    }
++
++    bool sendRemote( uint32_t errorID, uint64_t timestamp, /*const std::string &server, int serverPort,*/ int32_t isev, const std::string &message )
++    {
++        SNIK_DEB_OUT( "sendRemote1" );
++#if 1
++using namespace phosphor::logging;
++using namespace sdbusplus::xyz::openbmc_project::Logging::server;
++//        log<level::ERR>(
++//        log<level::INFO>(
++//        log<level::WARNING>(
++        if( isev >= 0 && isev <= 3 )
++        {
++        SNIK_DEB_OUT( "sendRemote1_1" );
++        log<level::CRIT>(
++            message.c_str(),
++            phosphor::logging::entry("FOR_REMOTE_SERVER=%s", "OK"),
++            phosphor::logging::entry("ERROR_ID=%d", errorID),
++            phosphor::logging::entry("TIMESTAMP=%llu", timestamp));
++//            phosphor::logging::entry("SEVERITY=%s", "Error"));
++//            phosphor::logging::entry("MESSAGE=%s", message.c_str()));
++        }
++        else
++        if( isev == 4 )
++        {
++        SNIK_DEB_OUT( "sendRemote1_2" );
++        log<level::WARNING>(
++            message.c_str(),
++            phosphor::logging::entry("FOR_REMOTE_SERVER=%s", "OK"),
++            phosphor::logging::entry("ERROR_ID=%d", errorID),
++            phosphor::logging::entry("TIMESTAMP=%llu", timestamp));
++//            phosphor::logging::entry("SEVERITY=%s", "Error"));
++//            phosphor::logging::entry("MESSAGE=%s", message.c_str()));
++        }
++        else
++        if( isev >= 5 && isev <= 7 )
++        {
++        SNIK_DEB_OUT( "sendRemote1_3" );
++        log<level::INFO>(
++            message.c_str(),
++            phosphor::logging::entry("FOR_REMOTE_SERVER=%s", "OK"),
++            phosphor::logging::entry("ERROR_ID=%d", errorID),
++            phosphor::logging::entry("TIMESTAMP=%llu", timestamp));
++//            phosphor::logging::entry("SEVERITY=%s", "Error"));
++//            phosphor::logging::entry("MESSAGE=%s", message.c_str()));
++        }
++        else
++            return( false );
++        
++SNIK_DEB_OUT( "sendRemote2 done !!!" );
++#endif
++        return( true );
++    }
++
++    void checkRemoteSend( const std::string &idStr, const std::string &timestamp, const std::string &messageID, const std::vector<std::string>& messageArgs )
++    {
++SNIK_DEB_OUT( "checkRemoteSend1 " << idStr << " " << timestamp << " " << messageID );
++        nlohmann::json bmcLogEntry;
++        if (event_log::formatEventLogEntry(idStr, messageID, messageArgs,
++                                               timestamp, "",
++                                               bmcLogEntry) != 0)
++        {
++            BMCWEB_LOG_DEBUG << "Read eventLog entry failed";
++            return;
++        }
++
++        std::string id_str = idStr;
++        size_t id_len = idStr.find( "-" );
++        if( id_len != std::string::npos )
++            id_str = idStr.substr( 0, id_len );
++        uint32_t errorID = std::stoul( id_str );
++        SNIK_DEB_OUT( "checkRemoteSend1_1 errorID=" << errorID );
++
++        uint64_t timestamp_val = errorID;
++        SNIK_DEB_OUT( "checkRemoteSend1_2 timestamp=" << timestamp_val );
++
++        const std::string &severity = bmcLogEntry[ "Severity" ];
++        int32_t isev;
++        if( severity == "Info" )
++            isev = 6;
++        else
++        if( severity == "Warning" )
++            isev = 4;
++        else
++        if( severity == "Critical" )
++            isev = 2;
++        else
++            return;
++        SNIK_DEB_OUT( "checkRemoteSend1_3 isev=" << isev );
++
++SNIK_DEB_OUT( "checkRemoteSend2 " );
++        remoteEmailConfigListLock.lock();
++        if( remoteEmailConfigList.size())
++        {
++            std::vector<std::tuple<std::string, int, std::string, std::string>> alredy_processed_addrs;
++
++            const std::string &ev_severity = bmcLogEntry[ "Severity" ];
++            const std::string &ev_message = bmcLogEntry[ "Message" ];
++SNIK_DEB_OUT( "checkRemoteSend3 severity=" << ev_severity << " message=" << ev_message );
++            for( size_t i = 0; i < remoteEmailConfigList.size(); ++i )
++            {
++                const nlohmann::json &em_entry = remoteEmailConfigList[ i];
++                const std::string &severity = em_entry[ "Severity" ];
++SNIK_DEB_OUT( "checkRemoteSend4 i=" << i << " t=" << severity );
++                if( ev_severity != severity )
++                    continue;
++                const std::string &substr = em_entry[ "Substr" ];
++SNIK_DEB_OUT( "checkRemoteSend5 i=" << i << " s=" << substr );
++                if( substr.size() && substr != "*" )
++                {
++                    if( ev_message.find( substr ) == std::string::npos )
++                        continue;
++                }
++
++                std::tuple<std::string, int, std::string, std::string> n { 
++                    em_entry[ "Server" ], em_entry[ "ServerPort" ], em_entry[ "SrcEmail" ], em_entry[ "DestEmail" ] 
++                };
++                auto it = std::find_if(alredy_processed_addrs.begin(), alredy_processed_addrs.end(), 
++                    [n](const std::tuple<std::string, int, std::string, std::string>& e) { return e == n; });
++                if (it != alredy_processed_addrs.end()) 
++                {
++                    SNIK_DEB_OUT( "Skip" );
++                    continue;
++                }
++
++SNIK_DEB_OUT( "checkRemoteSend6 i=" << i );
++                sendEmail( em_entry[ "Server" ], em_entry[ "ServerPort" ], em_entry[ "UserName" ],
++                           em_entry[ "SrcEmail" ], em_entry[ "DestEmail" ], em_entry[ "UserPass" ],
++                           bmcLogEntry[ "Severity" ], bmcLogEntry[ "Message" ] );
++
++SNIK_DEB_OUT( "checkRemoteSend7 i=" << i );
++                alredy_processed_addrs.emplace_back( n);
++            }
++        }
++        remoteEmailConfigListLock.unlock();
++SNIK_DEB_OUT( "checkRemoteSend8" );
++        remoteSNMPConfigListLock.lock();
++        if( remoteSNMPConfigList.size())
++        {
++            std::vector<std::tuple<std::string, int>> alredy_processed_addrs;
++
++            const std::string &ev_severity = bmcLogEntry[ "Severity" ];
++            const std::string &ev_message = bmcLogEntry[ "Message" ];
++SNIK_DEB_OUT( "checkRemoteSend9 severity=" << ev_severity << " message=" << ev_message );
++            for( size_t i = 0; i < remoteSNMPConfigList.size(); ++i )
++            {
++                const nlohmann::json &em_entry = remoteSNMPConfigList[ i];
++                const std::string &severity = em_entry[ "Severity" ];
++SNIK_DEB_OUT( "checkRemoteSend10 i=" << i << " t=" << severity );
++                if( ev_severity != severity )
++                    continue;
++                const std::string &substr = em_entry[ "Substr" ];
++SNIK_DEB_OUT( "checkRemoteSend11 i=" << i << " s=" << substr );
++                if( substr.size() && substr != "*" )
++                {
++                    if( ev_message.find( substr ) == std::string::npos )
++                        continue;
++                }
++
++                std::tuple<std::string, int> n { 
++                    em_entry[ "Server" ], em_entry[ "ServerPort" ]
++                };
++                auto it = std::find_if(alredy_processed_addrs.begin(), alredy_processed_addrs.end(), 
++                    [n](const std::tuple<std::string, int>& e) { return e == n; });
++                if (it != alredy_processed_addrs.end()) 
++                {
++                    SNIK_DEB_OUT( "Skip" );
++                    continue;
++                }
++
++SNIK_DEB_OUT( "checkRemoteSend12 i=" << i );
++                sendSNMP( errorID, timestamp_val, em_entry[ "Server" ], em_entry[ "ServerPort" ], isev, bmcLogEntry[ "Message" ] );
++SNIK_DEB_OUT( "checkRemoteSend13 i=" << i );
++
++                alredy_processed_addrs.emplace_back( n);
++            }
++        }
++        remoteSNMPConfigListLock.unlock();
++SNIK_DEB_OUT( "checkRemoteSend14" );
++        remoteConfigListLock.lock();
++        if( remoteConfigList.size())
++        {
++            std::vector<std::tuple<std::string, int>> alredy_processed_addrs;
++
++            const std::string &ev_severity = bmcLogEntry[ "Severity" ];
++            const std::string &ev_message = bmcLogEntry[ "Message" ];
++SNIK_DEB_OUT( "checkRemoteSend15 severity=" << ev_severity << " message=" << ev_message );
++            for( size_t i = 0; i < remoteConfigList.size(); ++i )
++            {
++                const nlohmann::json &em_entry = remoteConfigList[ i];
++                const std::string &severity = em_entry[ "Severity" ];
++SNIK_DEB_OUT( "checkRemoteSend16 i=" << i << " t=" << severity );
++                if( ev_severity != severity )
++                    continue;
++                const std::string &substr = em_entry[ "Substr" ];
++SNIK_DEB_OUT( "checkRemoteSend17 i=" << i << " s=" << substr );
++                if( substr.size() && substr != "*" )
++                {
++                    if( ev_message.find( substr ) == std::string::npos )
++                        continue;
++                }
++
++                std::tuple<std::string, int> n { 
++                    em_entry[ "Server" ], em_entry[ "ServerPort" ]
++                };
++                auto it = std::find_if(alredy_processed_addrs.begin(), alredy_processed_addrs.end(), 
++                    [n](const std::tuple<std::string, int>& e) { return e == n; });
++                if (it != alredy_processed_addrs.end()) 
++                {
++                    SNIK_DEB_OUT( "Skip" );
++                    continue;
++                }
++
++SNIK_DEB_OUT( "checkRemoteSend18 i=" << i );
++                sendRemote( errorID, timestamp_val, /*em_entry[ "Server" ], em_entry[ "ServerPort" ],*/ isev, bmcLogEntry[ "Message" ] );
++SNIK_DEB_OUT( "checkRemoteSend19 i=" << i );
++
++                alredy_processed_addrs.emplace_back( n);
++            }
++        }
++        remoteConfigListLock.unlock();
++    }
++
++#if 0
++    void removeOldestFiles( size_t maxFiles )
++    {
++        using file_info = std::tuple<std::filesystem::path, std::filesystem::file_time_type>;
++        static std::vector<file_info> file_vect;
++
++        if( !file_vect.size())
++        {
++            auto dirIter = std::filesystem::directory_iterator(webEventLogDir);
++            for (auto& entry : dirIter)
++            {
++                if (entry.is_regular_file())
++                {
++                   file_vect.emplace_back(file_info{entry.path(), entry.last_write_time()});
++                }
++            }
++
++            std::sort(std::begin(file_vect), std::end(file_vect), 
++                [](file_info &a, file_info &b) { return std::get<1>(a) > std::get<1>(b); });
++
++            //for (auto f : file_vect)
++            //    SNIK_DEB_OUT( std::get<0>(f) );
++        }
++    }
++#endif
++
+     void readEventLogsFromFile()
+     {
++SNIK_DEB_OUT( "readEventLogsFromFile started" );
+         std::ifstream logStream(redfishEventLogFile);
+         if (!logStream.good())
+         {
+@@ -1107,6 +1884,8 @@
+         {
+             // Update Pointer position
+             redfishLogFilePosition = logStream.tellg();
++SNIK_DEB_OUT1( "readEventLogsFromFile pos " << redfishLogFilePosition );
++SNIK_DEB_OUT1( "readEventLogsFromFile line " << logEntry );
+ 
+             std::string idStr;
+             if (!event_log::getUniqueEntryID(logEntry, idStr))
+@@ -1114,13 +1893,18 @@
+                 continue;
+             }
+ 
+-            if (!serviceEnabled || !noOfEventLogSubscribers)
+-            {
++SNIK_DEB_OUT1( "readEventLogsFromFile id " << idStr );
++
++//            removeOldestFiles( MAX_EVENT_COUNT );
++            addToEventFileInfoList( eventFileInfoList, MAX_EVENT_COUNT, idStr, logEntry );
++
++//            if (!serviceEnabled || !noOfEventLogSubscribers)
++//            {
+                 // If Service is not enabled, no need to compute
+                 // the remaining items below.
+                 // But, Loop must continue to keep track of Timestamp
+-                continue;
+-            }
++//                continue;
++//            }
+ 
+             std::string timestamp;
+             std::string messageID;
+@@ -1132,6 +1916,17 @@
+                 continue;
+             }
+ 
++SNIK_DEB_OUT( "call checkRemoteSend" );
++            checkRemoteSend(idStr, timestamp, messageID, messageArgs);
++
++            if (!serviceEnabled || !noOfEventLogSubscribers)
++            {
++                // If Service is not enabled, no need to compute
++                // the remaining items below.
++                // But, Loop must continue to keep track of Timestamp
++                continue;
++            }
++
+             std::string registryName;
+             std::string messageKey;
+             event_log::getRegistryAndMessageKey(messageID, registryName,
+@@ -1181,6 +1976,7 @@
+             boost::asio::buffer(readBuffer),
+             [&](const boost::system::error_code& ec,
+                 const std::size_t& bytesTransferred) {
++SNIK_DEB_OUT1( "/var/log/redfish updated !!!" );
+                 if (ec)
+                 {
+                     BMCWEB_LOG_ERROR << "Callback Error: " << ec.message();
+@@ -1194,6 +1990,7 @@
+                     std::memcpy(&event, &readBuffer[index], iEventSize);
+                     if (event.wd == dirWatchDesc)
+                     {
++SNIK_DEB_OUT1( "/var/log/ dir updated !!!" );
+                         if ((event.len == 0) ||
+                             (index + iEventSize + event.len > bytesTransferred))
+                         {
+@@ -1214,6 +2011,7 @@
+                             << fileName;
+                         if (event.mask == IN_CREATE)
+                         {
++SNIK_DEB_OUT1( "/var/log/redfish created !!!" );
+                             if (fileWatchDesc != -1)
+                             {
+                                 BMCWEB_LOG_DEBUG
+@@ -1243,6 +2041,7 @@
+                         else if ((event.mask == IN_DELETE) ||
+                                  (event.mask == IN_MOVED_TO))
+                         {
++SNIK_DEB_OUT1( "/var/log/redfish deleted or moved !!!" );
+                             if (fileWatchDesc != -1)
+                             {
+                                 inotify_rm_watch(inotifyFd, fileWatchDesc);
+@@ -1254,6 +2053,7 @@
+                     {
+                         if (event.mask == IN_MODIFY)
+                         {
++SNIK_DEB_OUT1( "/var/log/redfish file updated !!!" );
+                             EventServiceManager::getInstance()
+                                 .readEventLogsFromFile();
+                         }
+diff -r -u --new-file a/redfish-core/include/redfish.hpp b/redfish-core/include/redfish.hpp
+--- a/redfish-core/include/redfish.hpp	2022-09-04 17:05:53.755780733 +0300
++++ b/redfish-core/include/redfish.hpp	2022-09-06 20:31:11.014053736 +0300
+@@ -122,6 +122,18 @@
+         requestRoutesJournalEventLogEntryCollection(app);
+         requestRoutesJournalEventLogEntry(app);
+         requestRoutesJournalEventLogClear(app);
++
++        requestRoutesJournalEventLogRemoteEntryCollection(app);
++        requestRoutesJournalEventLogRemoteEntry(app);
++        requestRoutesJournalEventLogRemoteClear(app);
++
++        requestRoutesJournalEventLogRemoteEmailEntryCollection(app);
++        requestRoutesJournalEventLogRemoteEmailEntry(app);
++        requestRoutesJournalEventLogRemoteEmailClear(app);
++
++        requestRoutesJournalEventLogRemoteSNMPEntryCollection(app);
++        requestRoutesJournalEventLogRemoteSNMPEntry(app);
++        requestRoutesJournalEventLogRemoteSNMPClear(app);
+ #endif
+ 
+         requestRoutesBMCLogServiceCollection(app);
+diff -r -u --new-file a/redfish-core/include/registries/openbmc_message_registry.hpp b/redfish-core/include/registries/openbmc_message_registry.hpp
+--- a/redfish-core/include/registries/openbmc_message_registry.hpp	2022-09-04 17:05:53.755780733 +0300
++++ b/redfish-core/include/registries/openbmc_message_registry.hpp	2022-09-06 20:31:11.014053736 +0300
+@@ -29,7 +29,7 @@
+     "0.2.0",
+     "OpenBMC",
+ };
+-constexpr std::array<MessageEntry, 188> registry = {
++constexpr std::array<MessageEntry, 191> registry = {
+     MessageEntry{
+         "ADDDCCorrectable",
+         {
+@@ -2423,6 +2423,40 @@
+             {"string"},
+             "None.",
+         }},
++    MessageEntry{
++        "SystedUnitMessageCritical",
++        {
++            "Systemd unit message critical.",
++            "%1 : %2",
++            "Critical",
++            "Critical",
++            2,
++            {"string", "string"},
++            "None.",
++        }},
++    MessageEntry{
++        "SystedUnitMessageWarning",
++        {
++            "Systemd unit message warning.",
++            "%1 : %2",
++            "Warning",
++            "Warning",
++            2,
++            {"string", "string"},
++            "None.",
++        }},
++    MessageEntry{
++        "SystedUnitMessageInfo",
++        {
++            "Systemd unit message info.",
++            "%1 : %2",
++            "Info",
++            "Info",
++            2,
++            {"string", "string"},
++            "None.",
++        }},
++
+ 
+ };
+ } // namespace redfish::message_registries::openbmc
+diff -r -u --new-file a/redfish-core/lib/log_services.hpp b/redfish-core/lib/log_services.hpp
+--- a/redfish-core/lib/log_services.hpp	2022-09-04 17:05:53.763780664 +0300
++++ b/redfish-core/lib/log_services.hpp	2022-09-06 20:31:11.014053736 +0300
+@@ -24,9 +24,11 @@
+ #include "task.hpp"
+ 
+ #include <systemd/sd-journal.h>
++#include <stdio.h>
+ #include <unistd.h>
+ 
+ #include <app.hpp>
++#include <boost/filesystem.hpp>
+ #include <boost/algorithm/string/replace.hpp>
+ #include <boost/algorithm/string/split.hpp>
+ #include <boost/beast/http.hpp>
+@@ -45,6 +47,10 @@
+ 
+ namespace redfish
+ {
++//#define SNIK_DEB_OUT(str) std::cout << str << std::endl
++#define SNIK_DEB_OUT(str)
++//#define MAX_EVENT_COUNT 40
++#define MAX_EVENT_COUNT 10000
+ 
+ constexpr char const* crashdumpObject = "com.intel.crashdump";
+ constexpr char const* crashdumpPath = "/com/intel/crashdump";
+@@ -202,7 +208,7 @@
+     return true;
+ }
+ 
+-static constexpr const uint64_t maxEntriesPerPage = 1000;
++static constexpr const uint64_t maxEntriesPerPage = MAX_EVENT_COUNT;
+ static bool getTopParam(const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
+                         const crow::Request& req, uint64_t& top)
+ {
+@@ -271,6 +277,7 @@
+     return true;
+ }
+ 
++#if 0
+ static bool getUniqueEntryID(const std::string& logEntry, std::string& entryID,
+                              const bool firstEntry = true)
+ {
+@@ -309,6 +316,7 @@
+     }
+     return true;
+ }
++#endif
+ 
+ inline static bool
+     getTimestampFromID(const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
+@@ -348,30 +356,188 @@
+     return true;
+ }
+ 
++#if 0
++static const std::filesystem::path webLogDir = "/var/lib/redfish";
++static const std::string webLogFilename = "redfish-";
++static const std::string webLogFilenameResolvedSuffix = "-resolved";
++static const std::filesystem::path redfishLogDir = "/var/log";
++static const std::string redfishLogFilename = "redfish";
++
+ static bool
+-    getRedfishLogFiles(std::vector<std::filesystem::path>& redfishLogFiles)
++    getRedfishLogFiles(int mode, std::vector<std::filesystem::path>& redfishLogFiles)
+ {
+-    static const std::filesystem::path redfishLogDir = "/var/log";
+-    static const std::string redfishLogFilename = "redfish";
++SNIK_DEB_OUT( "getRedfishLogFiles" ); 
+ 
+-    // Loop through the directory looking for redfish log files
+-    for (const std::filesystem::directory_entry& dirEnt :
+-         std::filesystem::directory_iterator(redfishLogDir))
++    if(( mode & 1 ))
+     {
+-        // If we find a redfish log file, save the path
+-        std::string filename = dirEnt.path().filename();
+-        if (boost::starts_with(filename, redfishLogFilename))
++        // Loop through the directory looking for redfish log files
++        for (const std::filesystem::directory_entry& dirEnt :
++             std::filesystem::directory_iterator(webLogDir))
+         {
+-            redfishLogFiles.emplace_back(redfishLogDir / filename);
++            // If we find a redfish log file, save the path
++            std::string filename = dirEnt.path().filename();
++            if (boost::starts_with(filename, webLogFilename))
++            {
++                redfishLogFiles.emplace_back(webLogDir / filename);
++            }
++        }
++    }
++
++#if 0
++    if(( mode & 2 ))
++    {
++        // Loop through the directory looking for redfish log files
++        for (const std::filesystem::directory_entry& dirEnt :
++             std::filesystem::directory_iterator(redfishLogDir))
++        {
++            // If we find a redfish log file, save the path
++            std::string filename = dirEnt.path().filename();
++            if (boost::starts_with(filename, redfishLogFilename))
++            {
++                redfishLogFiles.emplace_back(redfishLogDir / filename);
++            }
+         }
+     }
++#endif
++
+     // As the log files rotate, they are appended with a ".#" that is higher for
+     // the older logs. Since we don't expect more than 10 log files, we
+     // can just sort the list to get them in order from newest to oldest
+     std::sort(redfishLogFiles.begin(), redfishLogFiles.end());
+ 
++#if 0
++    if(( mode & 4 ))
++    {
++        if( redfishLogFiles.size() > maxEntriesPerPage )
++        {
++            auto for_remove = redfishLogFiles.size() - static_cast<size_t>(maxEntriesPerPage);
++            while( for_remove-- )
++            {
++                std::filesystem::path event_file = redfishLogFiles[ 0];
++SNIK_DEB_OUT( "Remove event " << event_file );
++                redfishLogFiles.erase( redfishLogFiles.begin());
++                std::filesystem::remove( event_file );
++            }
++        }
++    }
++#endif
++
+     return !redfishLogFiles.empty();
+ }
++#endif
++
++#if 1
++static const std::filesystem::path webLogDir = "/var/lib/redfish";
++static const std::string webLogFilename = "redfish-";
++static const std::string webLogFilenameResolvedSuffix = "-resolved";
++static const std::filesystem::path redfishLogDir = "/var/log";
++static const std::string redfishLogFilename = "redfish";
++
++using EventFileInfo = std::tuple<std::filesystem::path, std::filesystem::file_time_type, std::string, std::string>;
++extern std::vector<EventFileInfo> eventFileInfoList;
++extern std::mutex eventFileInfoListLock;
++
++inline static bool clearEventFileInfoList( std::vector<EventFileInfo> &eventFileInfoList )
++{
++//    eventFileInfoListLock.lock();
++
++    auto dirIter = std::filesystem::directory_iterator(webEventLogDir);
++    for (auto& entry : dirIter)
++    {
++        if (entry.is_regular_file())
++        {
++            std::filesystem::remove( entry.path() );
++        }
++    }
++
++    eventFileInfoList.clear();
++
++//    eventFileInfoListLock.unlock();
++
++    if( system( "killall -HUP rsyslogd" ))
++    {
++        return( false );
++    }
++
++    return( true );
++}
++
++inline static bool removeFromEventFileInfoList( std::vector<EventFileInfo> &eventFileInfoList, const std::string &idStr )
++{
++    SNIK_DEB_OUT( "Try remove direct " << idStr );
++    bool res = false;
++//    eventFileInfoListLock.lock();
++    std::vector<EventFileInfo>::iterator it = find_if(eventFileInfoList.begin(), eventFileInfoList.end(), [idStr] (const EventFileInfo& f) { return std::get<2>(f) == idStr; } );
++    if( it != eventFileInfoList.end())
++    {
++        SNIK_DEB_OUT( "Remove direct " << idStr );
++        std::filesystem::path file = std::get<0>(*it);
++        eventFileInfoList.erase(it);
++        std::filesystem::remove( file );
++        res = true;
++
++        if( system( "killall -HUP rsyslogd" ))
++        {
++            res = false;
++        }
++
++        SNIK_DEB_OUT( "Remove direct " << idStr << " file=" << file << " done" );
++    }
++//    eventFileInfoListLock.unlock();
++    return( res );
++}
++
++inline static bool setResolvedEventFileInfoList( std::vector<EventFileInfo> &eventFileInfoList, const std::string &idStr, bool resolved )
++{
++    SNIK_DEB_OUT( "Try set resolved " << idStr << " to " << resolved );
++    bool res = false;
++//    eventFileInfoListLock.lock();
++    std::vector<EventFileInfo>::iterator it = find_if(eventFileInfoList.begin(), eventFileInfoList.end(), [idStr] (const EventFileInfo& f) { return std::get<2>(f) == idStr; } );
++    if( it != eventFileInfoList.end())
++    {
++        std::filesystem::path file = std::get<0>(*it);
++        SNIK_DEB_OUT( "Set resolved " << idStr << " to " << resolved << " file=" << file );
++
++        std::filesystem::path dstFile( webLogDir );
++        dstFile /= webLogFilename + idStr;
++        std::filesystem::path dstFile_resolved( dstFile );
++        dstFile_resolved += webLogFilenameResolvedSuffix;
++                
++        std::filesystem::path &oldFile = ( resolved ) ? dstFile : dstFile_resolved;
++        std::filesystem::path &newFile = ( resolved ) ? dstFile_resolved : dstFile;
++
++        if( file == oldFile )
++        {
++            std::string entry = std::get<3>(*it);
++            eventFileInfoList.erase(it);
++            std::filesystem::rename( oldFile, newFile );
++            eventFileInfoList.emplace_back(EventFileInfo{newFile, std::filesystem::last_write_time( newFile ), idStr, entry});
++            res = true;
++            SNIK_DEB_OUT( "Set resolved " << oldFile << " to " << newFile );
++        }
++    }
++//    eventFileInfoListLock.unlock();
++    return( res );
++}
++
++inline static bool getFromEventFileInfoList( std::vector<EventFileInfo> &eventFileInfoList, const std::string &idStr, EventFileInfo &fileInfo )
++{
++    SNIK_DEB_OUT( "Try get " << idStr );
++    bool res = false;
++//    eventFileInfoListLock.lock();
++    std::vector<EventFileInfo>::iterator it = find_if(eventFileInfoList.begin(), eventFileInfoList.end(), [idStr] (const EventFileInfo& f) { return std::get<2>(f) == idStr; } );
++    if( it != eventFileInfoList.end())
++    {
++        SNIK_DEB_OUT( "Get direct " << idStr );
++        fileInfo = (*it);
++        res = true;
++        SNIK_DEB_OUT( "Get direct " << idStr << " done" );
++    }
++//    eventFileInfoListLock.unlock();
++    return( res );
++}
++
++#endif
+ 
+ inline void
+     getDumpEntryCollection(const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
+@@ -1052,6 +1218,1233 @@
+         });
+ }
+ 
++const char *remoteConfigPath = "/etc/bmcweb";
++// =============================
++// RSYSLOG
++const char *remoteConfigFile = "remote_logs.json";
++extern nlohmann::json remoteConfigList;
++extern std::mutex remoteConfigListLock;
++
++inline bool updateRemoteConfigScript( const nlohmann::json &remoteConfigList )
++{
++    bool res = false;
++
++    SNIK_DEB_OUT( "updateRemoteConfigScript 1" );
++    {
++        std::filesystem::path file = "/etc/rsyslog.conf";
++        //std::filesystem::path file_prev = "/tmp/rsyslog.conf.prev";
++        std::filesystem::path out_file = "/tmp/rsyslog.tmp";
++
++        //std::filesystem::remove( file_prev ); 
++        //std::filesystem::copy( file, file_prev ); 
++
++        std::ifstream confStream( file );
++        if (confStream.good())
++        {
++    SNIK_DEB_OUT( "updateRemoteConfigScript 2" );
++            std::ofstream confOutStream( out_file );
++            bool start_found = false;
++            bool end_found = false;
++            std::string confEntry;
++            while (std::getline(confStream, confEntry))
++            {
++                confOutStream << confEntry << std::endl;
++                if( confEntry == "# === remote conf start ===" )
++                {
++                   //SNIK_DEB_OUT( "Found start !!!"<< std::endl;
++                   start_found = true;
++                   break;
++                }
++            }
++
++            if( start_found )
++            {
++    SNIK_DEB_OUT( "updateRemoteConfigScript 3" );
++                for (const auto& item : remoteConfigList.items())
++                {
++                    const auto &item_val = item.value();
++
++                    std::string connType = item_val[ "ConnType" ];
++                    std::transform(connType.begin(), connType.end(), connType.begin(),
++                        [](unsigned char c){ return std::tolower(c); });
++
++                    const std::string &sev = item_val[ "Severity" ];
++                    std::string sev_cond;
++                    if( sev == "Info" )
++                        sev_cond = " ( $!PRIORITY == \"5\" or $!PRIORITY == \"6\" or $!PRIORITY == \"7\" )";
++                    else
++                    if( sev == "Warning" )
++                        sev_cond = " $!PRIORITY == \"4\" ";
++                    else
++                    if( sev == "Critical" )
++                        sev_cond = " ( $!PRIORITY == \"0\" or $!PRIORITY == \"1\" or $!PRIORITY == \"2\" or $!PRIORITY == \"3\" )";
++                    else
++                    {
++                        SNIK_DEB_OUT( "updateRemoteConfigScript 3_1 " << sev );
++                        continue;
++                    }
++
++                    std::string mess_check;
++                    if( item_val[ "Substr" ] != "*" )
++                    {
++                        mess_check = " and $!MESSAGE contains ";
++                        mess_check += item_val[ "Substr" ];
++                    }
++
++    SNIK_DEB_OUT( "updateRemoteConfigScript 4 server=" << item_val[ "Server" ] << " port=" << item_val[ "ServerPort" ] );
++                    confOutStream << "if ($!FOR_REMOTE_SERVER != \"\" and" << sev_cond << mess_check << " ) then {"  << std::endl;
++                    confOutStream << "  action(type=\"omfwd\" target=" << item_val[ "Server" ] << " port=\"" << item_val[ "ServerPort" ] << "\" protocol=\"" << connType << "\" )"  << std::endl;
++                    confOutStream << "}"  << std::endl;
++                }
++
++                while (std::getline(confStream, confEntry))
++                {
++                    if( confEntry == "# === remote conf end ===" )
++                    {
++                       //SNIK_DEB_OUT( "Found end !!!" );
++                       end_found = true;
++                       confOutStream << confEntry  << std::endl;
++                       break;
++                    }
++                }
++
++                if( end_found )
++                {
++    SNIK_DEB_OUT( "updateRemoteConfigScript 5" );
++                    while (std::getline(confStream, confEntry))
++                    {
++                        confOutStream << confEntry  << std::endl;
++                    }
++
++                    confOutStream.close();
++
++                    std::filesystem::remove( file ); 
++                    std::filesystem::copy( out_file, file );
++                    res = true;
++                }
++            }
++
++            if( !start_found || !end_found )
++            {
++                confOutStream.close();
++                SNIK_DEB_OUT( "Restored old conf" );
++                res = false;
++            }
++
++            //std::filesystem::remove( file_prev ); 
++            std::filesystem::remove( out_file ); 
++        }
++    }
++
++    if( res )
++    {
++#if 0
++        // Reload rsyslog so it knows to start new log files
++        crow::connections::systemBus->async_method_call(
++            [&res](const boost::system::error_code ec) {
++                if (ec)
++                {
++                    BMCWEB_LOG_ERROR << "Failed to reload rsyslog: "
++                                             << ec;
++                    SNIK_DEB_OUT( "Restart rsyslog failed " << ec );
++                    res = false;
++                    return;
++                }
++                res = true;
++             },
++             "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
++             "org.freedesktop.systemd1.Manager", "ReloadUnit",
++             "rsyslog.service", "replace");
++#else
++        if( system( "systemctl restart rsyslog" ) != 0 )
++//        if( system( "killall -HUP rsyslogd" ) != 0 )
++        {
++            SNIK_DEB_OUT( "rsyslog restart failed" );
++            res = false;
++        }
++#endif
++        if( res )
++        {
++            sleep( 10);
++        }        
++    }
++
++    return( res );
++}
++
++inline bool clearRemoteConfig( nlohmann::json &remoteConfigList )
++{
++    bool res = true;
++    //remoteConfigListLock.lock();
++    remoteConfigList = nlohmann::json{};
++    if( unlink( remoteConfigFile ))
++    {
++        res = false;
++    }
++    if( !updateRemoteConfigScript( remoteConfigList ))
++    {
++        res = false;
++    }
++    //remoteConfigListLock.unlock();
++    return( res );
++}
++
++inline bool loadRemoteConfig( nlohmann::json &remoteConfigList )
++{
++    remoteConfigListLock.lock();
++
++    std::filesystem::path file = remoteConfigPath;
++    mkdir( file.c_str(), 0755 );
++    file /= remoteConfigFile;
++    std::ifstream ifs( file );
++    if( ifs )
++    {
++        try {
++            remoteConfigList = nlohmann::json::parse(ifs);
++        } catch( nlohmann::json::parse_error &e )
++        {
++            remoteConfigList = nlohmann::json{};
++        }
++    }
++    ifs.close();
++    remoteConfigListLock.unlock();
++
++    return( true );
++}
++
++inline void setRemoteConfig( nlohmann::json &item,  
++                const std::string &rc_severity,
++                const std::string &rc_substr,
++                const std::string &rc_server,
++                int rc_server_port,
++                const std::string &rc_conn_type )
++{
++    item = {{"Severity", rc_severity},
++            {"Substr", rc_substr},
++            {"Server", rc_server},
++            {"ServerPort", rc_server_port},
++            {"ConnType", rc_conn_type }};
++}
++
++inline void fillRemoteConfig( nlohmann::json &remoteLogEntry, const nlohmann::json &item, size_t entryId )
++{
++    remoteLogEntry = {
++        {"@odata.id",
++         std::string("/redfish/v1/Systems/system/LogServices/EventLog/Remote/Entries/") +
++             std::to_string(entryId)},
++        {"Name", "System Event Log Remote Entry"},
++        {"Id", entryId},
++        {"Severity", item["Severity"]},
++        {"Substr", item["Substr"]},
++        {"Server", item["Server"]},
++        {"EntryType", "Remote Config"},
++        {"ServerPort", item["ServerPort"]},
++        {"ConnType", item["ConnType"]}};
++}
++
++inline bool addRemoteConfig( nlohmann::json &remoteConfigList, 
++                const std::string &rc_severity,
++                const std::string &rc_substr,
++                const std::string &rc_server,
++                int rc_server_port,
++                const std::string &rc_conn_type )
++{
++    remoteConfigList.push_back({});
++    nlohmann::json& item = remoteConfigList.back();
++    setRemoteConfig( item, rc_severity, rc_substr, rc_server, rc_server_port, rc_conn_type );
++    return( true );
++}
++
++inline bool updateRemoteConfig( nlohmann::json &remoteConfigList, size_t num,
++                const std::string &rc_severity,
++                const std::string &rc_substr,
++                const std::string &rc_server,
++                int rc_server_port,
++                const std::string &rc_conn_type )
++{
++    bool res = false;
++    //remoteConfigListLock.lock();
++
++    if( num > remoteConfigList.size() || num < 1 )
++    {
++        addRemoteConfig( remoteConfigList, rc_severity, rc_substr, rc_server, rc_server_port, rc_conn_type );
++    }
++    else
++    {
++        setRemoteConfig( remoteConfigList[ num-1 ], rc_severity, rc_substr, rc_server, rc_server_port, rc_conn_type );
++    }
++
++    std::filesystem::path file = remoteConfigPath;
++    //mkdir( file.c_str(), 0777 );
++    file /= remoteConfigFile;
++
++    std::ofstream ofs( file );
++    if( ofs )
++    {
++        ofs << remoteConfigList;
++        ofs.close();
++
++        if( updateRemoteConfigScript( remoteConfigList ))
++        {
++            res = true;
++        }
++    }
++
++    //remoteConfigListLock.unlock();
++    return( res );
++}
++
++inline bool removeRemoteConfig( nlohmann::json &remoteConfigList, size_t num )
++{
++    bool res = false;
++    //remoteConfigListLock.lock();
++    if( num <= remoteConfigList.size() && num >= 1 )
++    {
++        remoteConfigList.erase( num-1 );
++        std::filesystem::path file = remoteConfigPath;
++        file /= remoteConfigFile;
++        std::ofstream ofs( file );
++        if( ofs )
++        {
++            ofs << remoteConfigList;
++            ofs.close();
++
++            if( updateRemoteConfigScript( remoteConfigList ))
++            {
++                res = true;
++            }
++        }
++    }
++
++    //remoteConfigListLock.unlock();
++    return( res );
++}
++
++inline void requestRoutesJournalEventLogRemoteClear(App& app)
++{
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Actions/"
++                      "LogService.ClearLog/")
++        .privileges({{"ConfigureComponents"}})
++        .methods(boost::beast::http::verb::post)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++SNIK_DEB_OUT( "Remote Clear 1" ); 
++                remoteConfigListLock.lock();
++                if( !clearRemoteConfig( remoteConfigList ))
++                {
++                    messages::internalError(asyncResp->res);
++                }
++                else
++                {
++SNIK_DEB_OUT( "Remote Clear 2" ); 
++                }
++                remoteConfigListLock.unlock();
++            });
++}
++
++inline void requestRoutesJournalEventLogRemoteEntryCollection(App& app)
++{
++    BMCWEB_ROUTE(app,
++                 "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Entries/")
++        .privileges(redfish::privileges::getLogEntryCollection)
++        .methods(boost::beast::http::verb::get)(
++            [](const crow::Request& ,//req,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++SNIK_DEB_OUT( "Remote Collection 1" ); 
++
++                // Collections don't include the static data added by SubRoute
++                // because it has a duplicate entry for members
++                asyncResp->res.jsonValue["@odata.type"] =
++                    "#RemoteLogEntryCollection.RemoteLogEntryCollection";
++                asyncResp->res.jsonValue["@odata.id"] =
++                    "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Entries";
++                asyncResp->res.jsonValue["Name"] = "System Event Log Remote Entries";
++                asyncResp->res.jsonValue["Description"] =
++                    "Collection of System Event Log Remote Entries";
++
++                nlohmann::json& logRemoteEntryArray =
++                    asyncResp->res.jsonValue["Members"];
++                logRemoteEntryArray = nlohmann::json::array();
++
++                remoteConfigListLock.lock();
++
++                size_t entryCount = 0;
++                for (const auto& item : remoteConfigList.items())
++                {
++                    entryCount++;
++                    const auto &item_val = item.value();
++                    logRemoteEntryArray.push_back({});
++                    nlohmann::json& remoteLogEntry = logRemoteEntryArray.back();
++                    fillRemoteConfig( remoteLogEntry, item_val, entryCount );
++                }
++
++                asyncResp->res.jsonValue["Members@odata.count"] = entryCount;
++SNIK_DEB_OUT( "Remote Collection 2" ); 
++
++                remoteConfigListLock.unlock();
++            });
++}
++
++inline bool convertToNumeric( const std::string &s, size_t &num )
++{
++    std::string::const_iterator it = s.begin();
++    while (it != s.end() && std::isdigit(*it)) ++it;
++    if( s.empty() || it != s.end())
++    {
++        return( false );
++    }
++    num = static_cast<size_t>(atoi( s.c_str()));
++    return( true );
++}
++
++inline void requestRoutesJournalEventLogRemoteEntry(App& app)
++{
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Entries/<str>/")
++        .privileges(redfish::privileges::getLogEntry)
++        .methods(boost::beast::http::verb::get)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId) {
++SNIK_DEB_OUT( "GET Remote Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++                remoteConfigListLock.lock();
++
++                if( num <= remoteConfigList.size() && num >= 1 )
++                {
++                    fillRemoteConfig( asyncResp->res.jsonValue, remoteConfigList[ num-1 ], num );
++SNIK_DEB_OUT( "GET Remote Entry " << entryId << " done" ); 
++                }
++                else
++                {
++                    // Requested ID was not found
++                    messages::resourceMissingAtURI(asyncResp->res, entryId);
++                }
++
++                remoteConfigListLock.unlock();
++
++            });
++
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Entries/<str>/")
++        .privileges(redfish::privileges::patchLogEntry)
++        .methods(boost::beast::http::verb::patch)(
++            [](const crow::Request& req,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId) {
++
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++                std::optional<std::string> rc_severity;
++                std::optional<std::string> rc_substr;
++                std::optional<std::string> rc_server;
++                std::optional<int> rc_server_port;
++                std::optional<std::string> rc_conn_type;
++                if (json_util::readJson(req, asyncResp->res, 
++                                         "Severity", rc_severity,
++                                         "Substr", rc_substr,
++                                         "Server", rc_server,
++                                         "ServerPort", rc_server_port,
++                                         "ConnType", rc_conn_type
++                                         ))
++                {
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " Severity=" << *rc_severity ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " Substr=" << *rc_substr ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " Server=" << *rc_server ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " ServerPort=" << *rc_server_port ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " ConnType=" << *rc_conn_type ); 
++
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " num=" << num ); 
++
++                    remoteConfigListLock.lock();
++
++                    if( !updateRemoteConfig( remoteConfigList, num,
++                                         *rc_severity,
++                                         *rc_substr,
++                                         *rc_server,
++                                         *rc_server_port,
++                                         *rc_conn_type ))
++                    {
++                        asyncResp->res.result(
++                            boost::beast::http::status::bad_request);
++                    }
++                    else
++                    {
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " done " ); 
++                    }
++
++                    remoteConfigListLock.unlock();
++                }
++                else
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                }
++            });
++
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Entries/<str>/")
++        .privileges(redfish::privileges::deleteLogEntry)
++
++        .methods(boost::beast::http::verb::delete_)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId)
++            {
++
++SNIK_DEB_OUT( "DEL Remote Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++SNIK_DEB_OUT( "DEL Remote Entry " << entryId << " num=" << num ); 
++                remoteConfigListLock.lock();
++
++                if( !removeRemoteConfig( remoteConfigList, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                }
++                else
++                {
++SNIK_DEB_OUT( "DEL Remote Entry " << entryId << " num=" << num << " done" ); 
++                }
++
++                remoteConfigListLock.unlock();
++            });
++
++}
++
++// =============================
++// REMORE LOG EMAIL
++const char *remoteEmailConfigFile = "remote_email_logs.json";
++extern nlohmann::json remoteEmailConfigList;
++extern std::mutex remoteEmailConfigListLock;
++inline bool clearRemoteEmailConfig( nlohmann::json &remoteEmailConfigList )
++{
++    remoteEmailConfigList = nlohmann::json{};
++    if( unlink( remoteEmailConfigFile ))
++    {
++        return( false );
++    }
++    return( true );
++}
++
++inline bool loadRemoteEmailConfig( nlohmann::json &remoteEmailConfigList )
++{
++    remoteEmailConfigListLock.lock();
++
++    std::filesystem::path file = remoteConfigPath;
++    mkdir( file.c_str(), 0755 );
++    file /= remoteEmailConfigFile;
++    std::ifstream ifs( file );
++    if( ifs )
++    {
++        remoteEmailConfigList = nlohmann::json::parse(ifs);
++        //return( remoteEmailConfigList.size() > 0 );
++    }
++    ifs.close();
++
++    remoteEmailConfigListLock.unlock();
++
++    return( true );
++}
++
++inline void setRemoteEmailConfig( nlohmann::json &item,  
++                const std::string &rle_severity,
++                const std::string &rle_substr,
++                const std::string &rle_server,
++                int rle_server_port,
++                const std::string &rle_conn_type,
++                const std::string &rle_user,
++                const std::string &rle_pass,
++                const std::string &rle_src_email,
++                const std::string &rle_dest_email )
++{
++    item = {{"Severity", rle_severity},
++            {"Substr", rle_substr},
++            {"Server", rle_server},
++            {"ServerPort", rle_server_port},
++            {"ConnType", rle_conn_type },
++            {"UserName", rle_user },
++            {"UserPass", rle_pass },
++            {"SrcEmail", rle_src_email },
++            {"DestEmail", rle_dest_email }};
++}
++
++inline void fillRemoteEmailConfig( nlohmann::json &remoteEmailLogEntry, const nlohmann::json &item, size_t entryId )
++{
++    remoteEmailLogEntry = {
++        {"@odata.id",
++         std::string("/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Entries/") +
++             std::to_string(entryId)},
++        {"Name", "System Event Remote Email Log Entry"},
++        {"Id", entryId},
++        {"Severity", item["Severity"]},
++        {"Substr", item["Substr"]},
++        {"Server", item["Server"]},
++        {"EntryType", "Remote Email Log Config"},
++        {"ServerPort", item["ServerPort"]},
++        {"ConnType", item["ConnType"]},
++        {"UserName", item["UserName"]},
++        {"UserPass", item["UserPass"]},
++        {"SrcEmail", item["SrcEmail"]},
++        {"DestEmail", item["DestEmail"]}};
++}
++
++inline bool addRemoteEmailConfig( nlohmann::json &remoteEmailConfigList, 
++                const std::string &rle_severity,
++                const std::string &rle_substr,
++                const std::string &rle_server,
++                int rle_server_port,
++                const std::string &rle_conn_type,
++                const std::string &rle_user,
++                const std::string &rle_pass,
++                const std::string &rle_src_email,
++                const std::string &rle_dest_email )
++{
++    remoteEmailConfigList.push_back({});
++    nlohmann::json& item = remoteEmailConfigList.back();
++    setRemoteEmailConfig( item, rle_severity, rle_substr, rle_server, rle_server_port, rle_conn_type, rle_user, rle_pass, rle_src_email, rle_dest_email );
++    return( true );
++}
++
++inline bool updateRemoteEmailConfig( nlohmann::json &remoteEmailConfigList, size_t num,
++                const std::string &rle_severity,
++                const std::string &rle_substr,
++                const std::string &rle_server,
++                int rle_server_port,
++                const std::string &rle_conn_type,
++                const std::string &rle_user,
++                const std::string &rle_pass,
++                const std::string &rle_src_email,
++                const std::string &rle_dest_email )
++{
++    bool res = false;
++    if( num > remoteEmailConfigList.size() || num < 1 )
++    {
++        addRemoteEmailConfig( remoteEmailConfigList, rle_severity, rle_substr, rle_server, rle_server_port, rle_conn_type, rle_user, rle_pass, rle_src_email, rle_dest_email );
++    }
++    else
++    {
++        setRemoteEmailConfig( remoteEmailConfigList[ num-1 ], rle_severity, rle_substr, rle_server, rle_server_port, rle_conn_type, rle_user, rle_pass, rle_src_email, rle_dest_email );
++    }
++
++    std::filesystem::path file = remoteConfigPath;
++    //mkdir( file.c_str(), 0777 );
++    file /= remoteEmailConfigFile;
++    std::ofstream ofs( file );
++    if( ofs )
++    {
++        ofs << remoteEmailConfigList;
++        res = true;
++    }
++
++    return( res );
++}
++
++inline bool removeRemoteEmailConfig( nlohmann::json &remoteEmailConfigList, size_t num )
++{
++    bool res = false;
++    if( num <= remoteEmailConfigList.size() && num >= 1 )
++    {
++        remoteEmailConfigList.erase( num-1 );
++        std::filesystem::path file = remoteConfigPath;
++        file /= remoteEmailConfigFile;
++        std::ofstream ofs( file );
++        if( ofs )
++        {
++            ofs << remoteEmailConfigList;
++            res = true;
++        }
++    }
++
++    return( res );
++}
++
++inline void requestRoutesJournalEventLogRemoteEmailClear(App& app)
++{
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Actions/"
++                      "LogService.ClearLog/")
++        .privileges({{"ConfigureComponents"}})
++        .methods(boost::beast::http::verb::post)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++SNIK_DEB_OUT( "Remote Email Clear 1" ); 
++                remoteEmailConfigListLock.lock();
++                if( !clearRemoteEmailConfig( remoteEmailConfigList ))
++                {
++                    messages::internalError(asyncResp->res);
++                }
++                else
++                {
++SNIK_DEB_OUT( "Remote Email Clear 2" ); 
++                }
++               remoteEmailConfigListLock.unlock();
++            });
++}
++
++inline void requestRoutesJournalEventLogRemoteEmailEntryCollection(App& app)
++{
++    BMCWEB_ROUTE(app,
++                 "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Entries/")
++        .privileges(redfish::privileges::getLogEntryCollection)
++        .methods(boost::beast::http::verb::get)(
++            [](const crow::Request& ,//req,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++SNIK_DEB_OUT( "Remote Email Collection 1" ); 
++                // Collections don't include the static data added by SubRoute
++                // because it has a duplicate entry for members
++                asyncResp->res.jsonValue["@odata.type"] =
++                    "#RemoteLogEntryCollection.RemoteEmailLogEntryCollection";
++                asyncResp->res.jsonValue["@odata.id"] =
++                    "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Entries";
++                asyncResp->res.jsonValue["Name"] = "System Event Remote Email Log Entries";
++                asyncResp->res.jsonValue["Description"] =
++                    "Collection of System Event Remote Email Log Entries";
++
++                nlohmann::json& logRemoteEmailEntryArray =
++                    asyncResp->res.jsonValue["Members"];
++                logRemoteEmailEntryArray = nlohmann::json::array();
++
++                remoteEmailConfigListLock.lock();
++
++                size_t entryCount = 0;
++                for (const auto& item : remoteEmailConfigList.items())
++                {
++                    entryCount++;
++                    const auto &item_val = item.value();
++                    logRemoteEmailEntryArray.push_back({});
++                    nlohmann::json& remoteEmailLogEntry = logRemoteEmailEntryArray.back();
++                    fillRemoteEmailConfig( remoteEmailLogEntry, item_val, entryCount );
++                }
++
++                remoteEmailConfigListLock.unlock();
++
++                asyncResp->res.jsonValue["Members@odata.count"] = entryCount;
++SNIK_DEB_OUT( "Remote Email Collection 2" ); 
++            });
++}
++
++inline void requestRoutesJournalEventLogRemoteEmailEntry(App& app)
++{
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Entries/<str>/")
++        .privileges(redfish::privileges::getLogEntry)
++        .methods(boost::beast::http::verb::get)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId) {
++
++SNIK_DEB_OUT( "GET Remote Email Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++                remoteEmailConfigListLock.lock();
++                if( num <= remoteEmailConfigList.size() && num >= 1 )
++                {
++                    fillRemoteEmailConfig( asyncResp->res.jsonValue, remoteEmailConfigList[ num-1 ], num );
++SNIK_DEB_OUT( "GET Remote Email Entry " << entryId << " done" ); 
++                }
++                else
++                {
++                    // Requested ID was not found
++                    messages::resourceMissingAtURI(asyncResp->res, entryId);
++                }
++                remoteEmailConfigListLock.unlock();
++            });
++
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Entries/<str>/")
++        .privileges(redfish::privileges::patchLogEntry)
++        .methods(boost::beast::http::verb::patch)(
++            [](const crow::Request& req,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId) {
++
++SNIK_DEB_OUT( "PATCH Remote Email Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++                std::optional<std::string> rle_severity;
++                std::optional<std::string> rle_substr;
++                std::optional<std::string> rle_server;
++                std::optional<int> rle_server_port;
++                std::optional<std::string> rle_conn_type;
++                std::optional<std::string> rle_user;
++                std::optional<std::string> rle_pass;
++                std::optional<std::string> rle_src_email;
++                std::optional<std::string> rle_dest_email;
++                if (json_util::readJson(req, asyncResp->res, 
++                                         "Severity", rle_severity,
++                                         "Substr", rle_substr,
++                                         "Server", rle_server,
++                                         "ServerPort", rle_server_port,
++                                         "ConnType", rle_conn_type,
++                                         "UserName", rle_user,
++                                         "UserPass", rle_pass,
++                                         "SrcEmail", rle_src_email,
++                                         "DestEmail", rle_dest_email
++                                         ))
++                {
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " Severity=" << *rle_severity ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " Substr=" << *rle_substr ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " Server=" << *rle_server ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " ServerPort=" << *rle_server_port ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " ConnType=" << *rle_conn_type ); 
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " UserName=" << *rle_user );
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " UserPass=" << *rle_pass );
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " SrcEmail=" << *rle_src_email );
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " DestEmail=" << *rle_dest_email );
++
++SNIK_DEB_OUT( "PATCH Remote Entry " << entryId << " num=" << num ); 
++
++                    remoteEmailConfigListLock.lock();
++                    if( !updateRemoteEmailConfig( remoteEmailConfigList, num,
++                                         *rle_severity,
++                                         *rle_substr,
++                                         *rle_server,
++                                         *rle_server_port,
++                                         *rle_conn_type,
++                                         *rle_user,
++                                         *rle_pass, 
++                                         *rle_src_email, 
++                                         *rle_dest_email ))
++                    {
++                        asyncResp->res.result(
++                            boost::beast::http::status::bad_request);
++                    }
++                    else
++                    {
++SNIK_DEB_OUT( "PATCH Remote Email Entry " << entryId << " done " ); 
++                    }
++                    remoteEmailConfigListLock.unlock();
++                }
++                else
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                }
++            });
++
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Entries/<str>/")
++        .privileges(redfish::privileges::deleteLogEntry)
++
++        .methods(boost::beast::http::verb::delete_)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId)
++            {
++
++SNIK_DEB_OUT( "DEL Remote Email Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++SNIK_DEB_OUT( "DEL Remote Email Entry " << entryId << " num=" << num ); 
++                remoteEmailConfigListLock.lock();
++                if( !removeRemoteEmailConfig( remoteEmailConfigList, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                }
++                else
++                {
++SNIK_DEB_OUT( "DEL Remote Email Entry " << entryId << " num=" << num << " done" ); 
++                }
++                remoteEmailConfigListLock.unlock();
++            });
++
++}
++
++// =============================
++// Remote SNMP Log
++const char *remoteSNMPConfigFile = "remote_snmp_logs.json";
++extern nlohmann::json remoteSNMPConfigList;
++extern std::mutex remoteSNMPConfigListLock;
++inline bool clearRemoteSNMPConfig( nlohmann::json &remoteSNMPConfigList )
++{
++    remoteSNMPConfigList = nlohmann::json{};
++    if( unlink( remoteSNMPConfigFile ))
++    {
++        return( false );
++    }
++    return( true );
++}
++
++inline bool loadRemoteSNMPConfig( nlohmann::json &remoteSNMPConfigList )
++{
++    remoteSNMPConfigListLock.lock();
++
++    std::filesystem::path file = remoteConfigPath;
++    mkdir( file.c_str(), 0755 );
++    file /= remoteSNMPConfigFile;
++    std::ifstream ifs( file );
++    if( ifs )
++    {
++        remoteSNMPConfigList = nlohmann::json::parse(ifs);
++        //return( remoteSNMPConfigList.size() > 0 );
++    }
++    ifs.close();
++    remoteSNMPConfigListLock.unlock();
++
++    return( true );
++}
++
++inline void setRemoteSNMPConfig( nlohmann::json &item,  
++                const std::string &rsnmp_severity,
++                const std::string &rsnmp_substr,
++                const std::string &rsnmp_server,
++                int rsnmp_server_port )
++{
++    item = {{"Severity", rsnmp_severity},
++            {"Substr", rsnmp_substr},
++            {"Server", rsnmp_server},
++            {"ServerPort", rsnmp_server_port}};
++}
++
++inline void fillRemoteSNMPConfig( nlohmann::json &remoteSNMPLogEntry, const nlohmann::json &item, size_t entryId )
++{
++    remoteSNMPLogEntry = {
++        {"@odata.id",
++         std::string("/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Entries/") +
++             std::to_string(entryId)},
++        {"Name", "System Event Remote SNMP Log Entry"},
++        {"Id", entryId},
++        {"Severity", item["Severity"]},
++        {"Substr", item["Substr"]},
++        {"Server", item["Server"]},
++        {"EntryType", "Remote SNMP Log Config"},
++        {"ServerPort", item["ServerPort"]}};
++}
++
++inline bool addRemoteSNMPConfig( nlohmann::json &remoteSNMPConfigList, 
++                const std::string &rsnmp_severity,
++                const std::string &rsnmp_substr,
++                const std::string &rsnmp_server,
++                int rsnmp_server_port )
++{
++    remoteSNMPConfigList.push_back({});
++    nlohmann::json& item = remoteSNMPConfigList.back();
++    setRemoteSNMPConfig( item, rsnmp_severity, rsnmp_substr, rsnmp_server, rsnmp_server_port );
++    return( true );
++}
++
++inline bool updateRemoteSNMPConfig( nlohmann::json &remoteSNMPConfigList, size_t num,
++                const std::string &rsnmp_severity,
++                const std::string &rsnmp_substr,
++                const std::string &rsnmp_server,
++                int rsnmp_server_port )
++{
++    bool res = false;
++
++    if( num > remoteSNMPConfigList.size() || num < 1 )
++    {
++        addRemoteSNMPConfig( remoteSNMPConfigList, rsnmp_severity, rsnmp_substr, rsnmp_server, rsnmp_server_port );
++    }
++    else
++    {
++        setRemoteSNMPConfig( remoteSNMPConfigList[ num-1 ], rsnmp_severity, rsnmp_substr, rsnmp_server, rsnmp_server_port );
++    }
++
++    std::filesystem::path file = remoteConfigPath;
++    //mkdir( file.c_str(), 0777 );
++    file /= remoteSNMPConfigFile;
++
++    std::ofstream ofs( file );
++    if( ofs )
++    {
++        ofs << remoteSNMPConfigList;
++        res = true;
++    }
++
++    return( res );
++}
++
++inline bool removeRemoteSNMPConfig( nlohmann::json &remoteSNMPConfigList, size_t num )
++{
++    bool res = false;
++    if( num <= remoteSNMPConfigList.size() && num >= 1 )
++    {
++        remoteSNMPConfigList.erase( num-1 );
++        std::filesystem::path file = remoteConfigPath;
++        file /= remoteSNMPConfigFile;
++        std::ofstream ofs( file );
++        if( ofs )
++        {
++            ofs << remoteSNMPConfigList;
++            res = true;
++        }
++    }
++
++    return( res );
++}
++
++inline void requestRoutesJournalEventLogRemoteSNMPClear(App& app)
++{
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Actions/"
++                      "LogService.ClearLog/")
++        .privileges({{"ConfigureComponents"}})
++        .methods(boost::beast::http::verb::post)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++SNIK_DEB_OUT( "Remote SNMP Clear 1" ); 
++                remoteSNMPConfigListLock.lock();
++                if( !clearRemoteSNMPConfig( remoteSNMPConfigList ))
++                {
++                    messages::internalError(asyncResp->res);
++                }
++                else
++                {
++SNIK_DEB_OUT( "Remote SNMP Clear 2" ); 
++                }
++                remoteSNMPConfigListLock.unlock();
++            });
++}
++
++inline void requestRoutesJournalEventLogRemoteSNMPEntryCollection(App& app)
++{
++    BMCWEB_ROUTE(app,
++                 "/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Entries/")
++        .privileges(redfish::privileges::getLogEntryCollection)
++        .methods(boost::beast::http::verb::get)(
++            [](const crow::Request& ,//req,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++SNIK_DEB_OUT( "Remote SNMP Collection 1" ); 
++                // Collections don't include the static data added by SubRoute
++                // because it has a duplicate entry for members
++                asyncResp->res.jsonValue["@odata.type"] =
++                    "#RemoteLogEntryCollection.RemoteSNMPLogEntryCollection";
++                asyncResp->res.jsonValue["@odata.id"] =
++                    "/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Entries";
++                asyncResp->res.jsonValue["Name"] = "System Event Remote SNMP Log Entries";
++                asyncResp->res.jsonValue["Description"] =
++                    "Collection of System Event Remote SNMP Log Entries";
++
++                nlohmann::json& logRemoteSNMPEntryArray =
++                    asyncResp->res.jsonValue["Members"];
++                logRemoteSNMPEntryArray = nlohmann::json::array();
++
++                remoteSNMPConfigListLock.lock();
++
++                size_t entryCount = 0;
++                for (const auto& item : remoteSNMPConfigList.items())
++                {
++                    entryCount++;
++                    const auto &item_val = item.value();
++                    logRemoteSNMPEntryArray.push_back({});
++                    nlohmann::json& remoteSNMPLogEntry = logRemoteSNMPEntryArray.back();
++                    fillRemoteSNMPConfig( remoteSNMPLogEntry, item_val, entryCount );
++                }
++
++                remoteSNMPConfigListLock.unlock();
++
++                asyncResp->res.jsonValue["Members@odata.count"] = entryCount;
++            });
++}
++
++inline void requestRoutesJournalEventLogRemoteSNMPEntry(App& app)
++{
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Entries/<str>/")
++        .privileges(redfish::privileges::getLogEntry)
++        .methods(boost::beast::http::verb::get)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId) {
++
++SNIK_DEB_OUT( "GET Remote SNMP Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++                remoteSNMPConfigListLock.lock();
++                if( num <= remoteSNMPConfigList.size() && num >= 1 )
++                {
++                    fillRemoteSNMPConfig( asyncResp->res.jsonValue, remoteSNMPConfigList[ num-1 ], num );
++SNIK_DEB_OUT( "GET Remote SNMP Entry " << entryId << " done" ); 
++                }
++                else
++                {
++                    // Requested ID was not found
++                    messages::resourceMissingAtURI(asyncResp->res, entryId);
++                }
++                remoteSNMPConfigListLock.unlock();
++            });
++
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Entries/<str>/")
++        .privileges(redfish::privileges::patchLogEntry)
++        .methods(boost::beast::http::verb::patch)(
++            [](const crow::Request& req,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId) {
++
++SNIK_DEB_OUT( "PATCH Remote SNMP Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++                std::optional<std::string> rsnmp_severity;
++                std::optional<std::string> rsnmp_substr;
++                std::optional<std::string> rsnmp_server;
++                std::optional<int> rsnmp_server_port;
++                if (json_util::readJson(req, asyncResp->res, 
++                                         "Severity", rsnmp_severity,
++                                         "Substr", rsnmp_substr,
++                                         "Server", rsnmp_server,
++                                         "ServerPort", rsnmp_server_port
++                                         ))
++                {
++SNIK_DEB_OUT( "PATCH Remote SNMP Entry " << entryId << " Severity=" << *rsnmp_severity ); 
++SNIK_DEB_OUT( "PATCH Remote SNMP Entry " << entryId << " Substr=" << *rsnmp_substr ); 
++SNIK_DEB_OUT( "PATCH Remote SNMP Entry " << entryId << " Server=" << *rsnmp_server ); 
++SNIK_DEB_OUT( "PATCH Remote SNMP Entry " << entryId << " ServerPort=" << *rsnmp_server_port ); 
++
++SNIK_DEB_OUT( "PATCH Remote SNMP Entry " << entryId << " num=" << num ); 
++
++#if 0
++// busctl call xyz.openbmc_project.Network.SNMP /xyz/openbmc_project/network/snmp/manager xyz.openbmc_project.Network.Client.Create Client sq "10.0.2.2" 162
++
++                    bool res = false; 
++                    std::vector<std::string> res_response;
++                    //std::string res_response;
++                    crow::connections::systemBus->async_method_call(
++                        [asyncResp, &res, &res_response](const boost::system::error_code ec,
++                            const std::vector<std::string>& resp) 
++                            //const std::string& resp) 
++                            {
++                                //SNIK_DEB_OUT( "resp received : " << resp );
++                                SNIK_DEB_OUT( "resp received : " << resp.size() );
++                                if (ec)
++                                {
++                                    SNIK_DEB_OUT( "create new SNMP entry failed " << ec );
++                                    messages::internalError(asyncResp->res);
++                                    res = false;
++                                    return;
++                                }
++
++                                res_response = resp;
++                                res = true;
++
++                                for (auto& s : resp)
++                                {
++                                    SNIK_DEB_OUT( "s : " << s );
++                                }
++                            },
++                        "xyz.openbmc_project.Network.SNMP", "/xyz/openbmc_project/network/snmp/manager",
++                        "xyz.openbmc_project.Network.Client.Create", "Client", // "sq",
++                        *rsnmp_server, *rsnmp_server_port );
++#endif
++
++                    remoteSNMPConfigListLock.lock();
++                    if( !updateRemoteSNMPConfig( remoteSNMPConfigList, num,
++                                         *rsnmp_severity,
++                                         *rsnmp_substr,
++                                         *rsnmp_server,
++                                         *rsnmp_server_port ))
++                    {
++                        asyncResp->res.result(
++                            boost::beast::http::status::bad_request);
++                    }
++                    else
++                    {
++SNIK_DEB_OUT( "PATCH Remote SNMP Entry " << entryId << " done " ); 
++                    }
++                    remoteSNMPConfigListLock.unlock();
++                }
++                else
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                }
++            });
++
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Entries/<str>/")
++        .privileges(redfish::privileges::deleteLogEntry)
++
++        .methods(boost::beast::http::verb::delete_)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId)
++            {
++
++SNIK_DEB_OUT( "DEL Remote SNMP Entry " << entryId ); 
++
++                size_t num;
++                if( !convertToNumeric( entryId, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++
++SNIK_DEB_OUT( "DEL Remote SNMP Entry " << entryId << " num=" << num ); 
++                remoteSNMPConfigListLock.lock();
++                if( !removeRemoteSNMPConfig( remoteSNMPConfigList, num ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                }
++                else
++                {
++SNIK_DEB_OUT( "DEL Remote SNMP Entry " << entryId << " num=" << num << " done" ); 
++                }
++                remoteSNMPConfigListLock.unlock();
++            });
++
++}
++
+ inline void requestRoutesJournalEventLogClear(App& app)
+ {
+     BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/LogServices/EventLog/Actions/"
+@@ -1061,8 +2454,24 @@
+             [](const crow::Request&,
+                const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
+                 // Clear the EventLog by deleting the log files
++#if 1
++SNIK_DEB_OUT( "call clearEventFileInfoList" ); 
++                eventFileInfoListLock.lock();
++                if( !clearEventFileInfoList( eventFileInfoList ))
++                {
++                    messages::internalError(asyncResp->res);
++                }
++                else
++                {
++                    messages::success(asyncResp->res);
++SNIK_DEB_OUT( "call clearEventFileInfoList done" ); 
++                }
++                eventFileInfoListLock.unlock();
++#endif
++#if 0
+                 std::vector<std::filesystem::path> redfishLogFiles;
+-                if (getRedfishLogFiles(redfishLogFiles))
++SNIK_DEB_OUT( "call getRedfishLogFiles 3" ); 
++                if (getRedfishLogFiles(3,redfishLogFiles))
+                 {
+                     for (const std::filesystem::path& file : redfishLogFiles)
+                     {
+@@ -1087,11 +2496,13 @@
+                     "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+                     "org.freedesktop.systemd1.Manager", "ReloadUnit",
+                     "rsyslog.service", "replace");
++#endif
+             });
+ }
+ 
+ static int fillEventLogEntryJson(const std::string& logEntryID,
+                                  const std::string& logEntry,
++                                 bool resolved,
+                                  nlohmann::json& logEntryJson)
+ {
+     // The redfish log format is "<Timestamp> <MessageId>,<MessageArgs>"
+@@ -1183,6 +2594,7 @@
+         {"MessageArgs", messageArgs},
+         {"EntryType", "Event"},
+         {"Severity", std::move(severity)},
++        {"Resolved", resolved},
+         {"Created", std::move(timestamp)}};
+     return 0;
+ }
+@@ -1220,8 +2632,50 @@
+                 logEntryArray = nlohmann::json::array();
+                 // Go through the log files and create a unique ID for each
+                 // entry
++
++#if 1
++                bool res = true;
++                uint64_t entryCount = 0;
++                eventFileInfoListLock.lock();
++
++                // Oldest logs are in the last file, so start there and loop
++                // backwards
++                for (auto it = eventFileInfoList.rbegin();
++                     it < eventFileInfoList.rend(); it++)
++                {
++                    entryCount++;
++                    // Handle paging using skip (number of entries to skip
++                    // from the start) and top (number of entries to
++                    // display)
++                    if (entryCount <= skip || entryCount > skip + top)
++                    {
++                        continue;
++                    }
++
++                    std::string fname( std::get<0>(*it).string() );
++                    bool resolved = ( fname.find( webLogFilenameResolvedSuffix ) != std::string::npos );
++
++                    std::string idStr = std::get<2>(*it);
++                    std::string logEntry = std::get<3>(*it);
++
++                    logEntryArray.push_back({});
++                    nlohmann::json& bmcLogEntry = logEntryArray.back();
++                    if (fillEventLogEntryJson(idStr, logEntry, resolved,
++                                                 bmcLogEntry) != 0)
++                    {
++                        messages::internalError(asyncResp->res);
++                        res = false;
++                        break;
++                    }
++                }
++
++                eventFileInfoListLock.unlock();
++                if( !res ) return;
++#endif
++#if 0
+                 std::vector<std::filesystem::path> redfishLogFiles;
+-                getRedfishLogFiles(redfishLogFiles);
++SNIK_DEB_OUT( "call getRedfishLogFiles 1" ); 
++                getRedfishLogFiles(1,redfishLogFiles);
+                 uint64_t entryCount = 0;
+                 std::string logEntry;
+ 
+@@ -1236,8 +2690,21 @@
+                         continue;
+                     }
+ 
++                    std::string fname( (*it).string());
++                    bool resolved = ( fname.find( webLogFilenameResolvedSuffix ) != std::string::npos );
++
++                    size_t id_beg = fname.find( webLogFilename );
++                    if( id_beg == std::string::npos )
++                        continue;
++                    id_beg += webLogFilename.size();
++                    size_t id_end = fname.find( "-", id_beg );
++                    size_t id_len = id_end;
++                    if( id_len != std::string::npos )
++                        id_len = id_end - id_beg;
++                    std::string idStr = fname.substr( id_beg, id_len );
++
+                     // Reset the unique ID on the first entry
+-                    bool firstEntry = true;
++//                    bool firstEntry = true;
+                     while (std::getline(logStream, logEntry))
+                     {
+                         entryCount++;
+@@ -1248,7 +2715,7 @@
+                         {
+                             continue;
+                         }
+-
++#if 0
+                         std::string idStr;
+                         if (!getUniqueEntryID(logEntry, idStr, firstEntry))
+                         {
+@@ -1259,10 +2726,10 @@
+                         {
+                             firstEntry = false;
+                         }
+-
++#endif
+                         logEntryArray.push_back({});
+                         nlohmann::json& bmcLogEntry = logEntryArray.back();
+-                        if (fillEventLogEntryJson(idStr, logEntry,
++                        if (fillEventLogEntryJson(idStr, logEntry, resolved,
+                                                   bmcLogEntry) != 0)
+                         {
+                             messages::internalError(asyncResp->res);
+@@ -1270,6 +2737,7 @@
+                         }
+                     }
+                 }
++#endif
+                 asyncResp->res.jsonValue["Members@odata.count"] = entryCount;
+                 if (skip + top < entryCount)
+                 {
+@@ -1291,11 +2759,39 @@
+                const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
+                const std::string& param) {
+                 const std::string& targetID = param;
++#if 1
++SNIK_DEB_OUT( "call getFromEventFileInfoList " << targetID ); 
++                eventFileInfoListLock.lock();
++                EventFileInfo fileInfo;
++                if( !getFromEventFileInfoList( eventFileInfoList, targetID, fileInfo ))
++                {
++                    messages::resourceMissingAtURI(asyncResp->res, targetID);
++                }
++                else
++                {
++                    std::string fname( std::get<0>(fileInfo).string() );
++                    bool resolved = ( fname.find( webLogFilenameResolvedSuffix ) != std::string::npos );
++
++                    std::string idStr = std::get<2>(fileInfo);
++                    std::string logEntry = std::get<3>(fileInfo);
+ 
++                    if (fillEventLogEntryJson( idStr, logEntry, resolved, asyncResp->res.jsonValue) != 0)
++                    {
++                        messages::internalError(asyncResp->res);
++                    }
++                    else
++                    {
++SNIK_DEB_OUT( "call getFromEventFileInfoList " << targetID << " done" ); 
++                    }
++                }
++                eventFileInfoListLock.unlock();
++#endif
++#if 0
+                 // Go through the log files and check the unique ID for each
+                 // entry to find the target entry
+                 std::vector<std::filesystem::path> redfishLogFiles;
+-                getRedfishLogFiles(redfishLogFiles);
++SNIK_DEB_OUT( "call getRedfishLogFiles 2" ); 
++                getRedfishLogFiles(1,redfishLogFiles);
+                 std::string logEntry;
+ 
+                 // Oldest logs are in the last file, so start there and loop
+@@ -1309,6 +2805,9 @@
+                         continue;
+                     }
+ 
++                    std::string fname( (*it).string());
++                    bool resolved = ( fname.find( webLogFilenameResolvedSuffix ) != std::string::npos );
++
+                     // Reset the unique ID on the first entry
+                     bool firstEntry = true;
+                     while (std::getline(logStream, logEntry))
+@@ -1327,7 +2826,7 @@
+                         if (idStr == targetID)
+                         {
+                             if (fillEventLogEntryJson(
+-                                    idStr, logEntry,
++                                    idStr, logEntry, resolved,
+                                     asyncResp->res.jsonValue) != 0)
+                             {
+                                 messages::internalError(asyncResp->res);
+@@ -1339,7 +2838,173 @@
+                 }
+                 // Requested ID was not found
+                 messages::resourceMissingAtURI(asyncResp->res, targetID);
++#endif
++            });
++
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Entries/<str>/")
++        .privileges(redfish::privileges::patchLogEntry)
++        .methods(boost::beast::http::verb::patch)(
++            [](const crow::Request& req,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& entryId) {
++SNIK_DEB_OUT( "cal sel resolved " << entryId ); 
++                std::optional<bool> resolved;
++
++                if (!json_util::readJson(req, asyncResp->res, "Resolved",
++                                         resolved))
++                {
++                    return;
++                }
++                BMCWEB_LOG_DEBUG << "Set Resolved";
++
++SNIK_DEB_OUT( "cal sel resolved " << entryId << " mode " << *resolved ); 
++#if 1
++SNIK_DEB_OUT( "call setResolvedEventFileInfoList " << entryId ); 
++                eventFileInfoListLock.lock();
++
++                if( !setResolvedEventFileInfoList( eventFileInfoList, entryId, *resolved ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                }
++                else
++                {
++SNIK_DEB_OUT( "call setResolvedEventFileInfoList " << entryId << " done" ); 
++                }
++                eventFileInfoListLock.unlock();
++#endif
++
++#if 0
++                std::filesystem::path dstFile( webLogDir );
++                dstFile += "/" + webLogFilename + entryId;
++                std::filesystem::path dstFile_resolved( dstFile );
++                dstFile_resolved += webLogFilenameResolvedSuffix;
++                
++                std::filesystem::path &oldFile = ( *resolved ) ? dstFile : dstFile_resolved;
++                std::filesystem::path &newFile = ( *resolved ) ? dstFile_resolved : dstFile;
++
++SNIK_DEB_OUT( "rename file " << oldFile << " to " << newFile ); 
++                if( rename( oldFile.c_str(), newFile.c_str() ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++SNIK_DEB_OUT( "rename file " << oldFile << " to " << newFile << " success" ); 
++#if 0
++                crow::connections::systemBus->async_method_call(
++                    [asyncResp, entryId](const boost::system::error_code ec) {
++                        if (ec)
++                        {
++                            BMCWEB_LOG_DEBUG << "DBUS response error " << ec;
++                            messages::internalError(asyncResp->res);
++                            return;
++                        }
++                    },
++                    "xyz.openbmc_project.Logging",
++                    "/xyz/openbmc_project/logging/entry/" + entryId,
++                    "org.freedesktop.DBus.Properties", "Set",
++                    "xyz.openbmc_project.Logging.Entry", "Resolved",
++                    dbus::utility::DbusVariantType(*resolved));
++#endif
++#endif
+             });
++
++    BMCWEB_ROUTE(
++        app, "/redfish/v1/Systems/system/LogServices/EventLog/Entries/<str>/")
++        .privileges(redfish::privileges::deleteLogEntry)
++
++        .methods(boost::beast::http::verb::delete_)(
++            [](const crow::Request&,
++               const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
++               const std::string& param)
++
++            {
++SNIK_DEB_OUT( "call delete entry " << param ); 
++// /redfish/v1/Systems/system/LogServices/EventLog/Entries/1660226143
++
++                std::string::const_iterator it = param.begin();
++                while (it != param.end() && ( std::isdigit(*it) || *it == '_')) ++it;
++                if( param.empty() || it != param.end())
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                    return;
++                }
++#if 1
++SNIK_DEB_OUT( "call removeFromEventFileInfoList " << param ); 
++                eventFileInfoListLock.lock();
++
++                if( !removeFromEventFileInfoList( eventFileInfoList, param ))
++                {
++                    asyncResp->res.result(
++                        boost::beast::http::status::bad_request);
++                }
++                else
++                {
++SNIK_DEB_OUT( "call removeFromEventFileInfoList " << param << " done" ); 
++                }
++                eventFileInfoListLock.unlock();
++                asyncResp->res.result(boost::beast::http::status::ok);
++#endif
++#if 0
++                BMCWEB_LOG_DEBUG << "Do delete single event entries.";
++                
++                std::filesystem::path dstFile( webLogDir );
++                dstFile += "/" + webLogFilename + param;
++SNIK_DEB_OUT( "remove file " << dstFile ); 
++                if( unlink( dstFile.c_str() ))
++                {
++                    dstFile += webLogFilenameResolvedSuffix;
++                    if( unlink( dstFile.c_str() ))
++                    {
++                        asyncResp->res.result(
++                            boost::beast::http::status::bad_request);
++                        return;
++                    }
++                }
++SNIK_DEB_OUT( "remove file " << dstFile << "success" ); 
++                asyncResp->res.result(boost::beast::http::status::ok);
++#if 0
++                std::string entryID = param;
++
++                dbus::utility::escapePathForDbus(entryID);
++
++                // Process response from Logging service.
++                auto respHandler = [asyncResp, entryID](
++                                       const boost::system::error_code ec) {
++                    BMCWEB_LOG_DEBUG
++                        << "EventLogEntry (DBus) doDelete callback: Done";
++                    if (ec)
++                    {
++                        if (ec.value() == EBADR)
++                        {
++                            messages::resourceNotFound(asyncResp->res,
++                                                       "LogEntry", entryID);
++                            return;
++                        }
++                        // TODO Handle for specific error code
++                        BMCWEB_LOG_ERROR
++                            << "EventLogEntry (DBus) doDelete respHandler got error "
++                            << ec;
++                        asyncResp->res.result(
++                            boost::beast::http::status::internal_server_error);
++                        return;
++                    }
++
++                    asyncResp->res.result(boost::beast::http::status::ok);
++                };
++
++                // Make call to Logging service to request Delete Log
++                crow::connections::systemBus->async_method_call(
++                    respHandler, "xyz.openbmc_project.Logging",
++                    "/xyz/openbmc_project/logging/entry/" + entryID,
++                    "xyz.openbmc_project.Object.Delete", "Delete");
++#endif
++#endif
++            });
++
+ }
+ 
+ inline void requestRoutesDBusEventLogEntryCollection(App& app)
+@@ -1650,6 +3315,7 @@
+             [](const crow::Request& req,
+                const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
+                const std::string& entryId) {
++SNIK_DEB_OUT( "cal sel resolved" ); 
+                 std::optional<bool> resolved;
+ 
+                 if (!json_util::readJson(req, asyncResp->res, "Resolved",
+@@ -1685,6 +3351,9 @@
+                const std::string& param)
+ 
+             {
++SNIK_DEB_OUT( "call delete entry " << param ); 
++// /redfish/v1/Systems/system/LogServices/EventLog/Entries/1660226143
++
+                 BMCWEB_LOG_DEBUG << "Do delete single event entries.";
+ 
+                 std::string entryID = param;
+diff -r -u --new-file a/src/webserver_main.cpp b/src/webserver_main.cpp
+--- a/src/webserver_main.cpp	2022-09-04 17:05:53.763780664 +0300
++++ b/src/webserver_main.cpp	2022-09-06 20:31:11.014053736 +0300
+@@ -61,10 +61,27 @@
+     }
+ }
+ 
++namespace redfish 
++{
++nlohmann::json remoteConfigList;
++std::mutex remoteConfigListLock;
++nlohmann::json remoteEmailConfigList;
++std::mutex remoteEmailConfigListLock;
++nlohmann::json remoteSNMPConfigList;
++std::mutex remoteSNMPConfigListLock;
++std::vector<EventFileInfo> eventFileInfoList;
++std::mutex eventFileInfoListLock;
++}
++
+ int run()
+ {
+     crow::Logger::setLogLevel(crow::LogLevel::Debug);
+ 
++    redfish::loadEventFileInfoList( redfish::eventFileInfoList );
++    redfish::loadRemoteConfig( redfish::remoteConfigList );
++    redfish::loadRemoteEmailConfig( redfish::remoteEmailConfigList );
++    redfish::loadRemoteSNMPConfig( redfish::remoteSNMPConfigList );
++
+     auto io = std::make_shared<boost::asio::io_context>();
+     App app(io);
+ 

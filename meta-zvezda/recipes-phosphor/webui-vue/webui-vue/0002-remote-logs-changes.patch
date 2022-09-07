@@ -1,0 +1,3601 @@
+diff -r -u --new-file a/src/components/AppNavigation/AppNavigationMixin.js b/src/components/AppNavigation/AppNavigationMixin.js
+--- a/src/components/AppNavigation/AppNavigationMixin.js	2022-09-04 16:42:27.211873400 +0300
++++ b/src/components/AppNavigation/AppNavigationMixin.js	2022-09-06 20:31:24.205944729 +0300
+@@ -37,6 +37,16 @@
+               label: this.$t('appNavigation.eventLogs'),
+               route: '/logs/event-logs',
+             },
++            {
++              id: 'event-logs1',
++              label: this.$t('appNavigation.eventLogs1'),
++              route: '/logs/event-logs1',
++            },
++            {
++              id: 'event-logs2',
++              label: this.$t('appNavigation.eventLogs2'),
++              route: '/logs/event-logs2',
++            },
+             // {
+             //   id: 'post-code-logs',
+             //   label: this.$t('appNavigation.postCodeLogs'),
+@@ -123,6 +133,11 @@
+               label: this.$t('appNavigation.powerRestorePolicy'),
+               route: '/settings/power-restore-policy',
+             },
++            {
++              id: 'remote-logs',
++              label: this.$t('appNavigation.remoteLogs'),
++              route: '/settings/remote-logs',
++            },
+           ],
+         },
+         {
+diff -r -u --new-file a/src/components/Mixins/TableFilterMixin.js b/src/components/Mixins/TableFilterMixin.js
+--- a/src/components/Mixins/TableFilterMixin.js	2022-09-04 16:42:27.215873366 +0300
++++ b/src/components/Mixins/TableFilterMixin.js	2022-09-06 20:31:24.205944729 +0300
+@@ -23,6 +23,28 @@
+         return returnRow;
+       });
+     },
++    getFilteredTableData1(tableData = [], filters = []) {
++      const filterItems = filters.reduce((arr, filter) => {
++        return [...arr, ...filter.values];
++      }, []);
++      // If no filters are active, then return all table data
++      if (filterItems.length === 0) return tableData;
++
++      // Check if row property value is included in list of
++      // active filters
++      return tableData.filter((row) => {
++        let returnRow = false;
++        for (const { key, values } of filters) {
++          //const rowProperty = row[key];
++          const rowProperty = row[key].split(':')[0];
++          if (rowProperty && includes(rowProperty, values)) {
++            returnRow = true;
++            break;
++          }
++        }
++        return returnRow;
++      });
++    },
+     getFilteredTableDataByDate(
+       tableData = [],
+       startDate,
+diff -r -u --new-file a/src/locales/en-US.json b/src/locales/en-US.json
+--- a/src/locales/en-US.json	2022-09-04 16:42:27.219873331 +0300
++++ b/src/locales/en-US.json	2022-09-06 20:31:24.065945885 +0300
+@@ -106,6 +106,8 @@
+     "dateTime": "@:appPageTitle.dateTime",
+     "dumps": "@:appPageTitle.dumps",
+     "eventLogs": "@:appPageTitle.eventLogs",
++    "eventLogs1": "@:appPageTitle.eventLogs1",
++    "eventLogs2": "@:appPageTitle.eventLogs2",
+     "factoryReset": "@:appPageTitle.factoryReset",
+     "firmware": "@:appPageTitle.firmware",
+     "hardwareStatus": "Hardware status",
+@@ -115,6 +117,7 @@
+     "logs": "Logs",
+     "userManagement": "@:appPageTitle.userManagement",
+     "network": "@:appPageTitle.network",
++    "remoteLogs": "@:appPageTitle.remoteLogs",
+     "overview": "@:appPageTitle.overview",
+     "primaryNavigation": "Primary navigation",
+     "postCodeLogs": "@:appPageTitle.postCodeLogs",
+@@ -134,7 +137,9 @@
+     "sessions": "Sessions",
+     "dateTime": "Date and time",
+     "dumps": "Dumps",
+-    "eventLogs": "Event logs",
++    "eventLogs": "BMC Events",
++    "eventLogs1": "System Events",
++    "eventLogs2": "Security Events",
+     "factoryReset": "Factory reset",
+     "firmware": "Firmware",
+     "inventory": "Inventory and LEDs",
+@@ -143,6 +148,7 @@
+     "userManagement": "User management",
+     "login": "Login",
+     "network": "Network",
++    "remoteLogs": "Remote Logs",
+     "overview": "Overview",
+     "pageNotFound": "Page not found",
+     "postCodeLogs": "POST code logs",
+@@ -682,6 +688,63 @@
+       "successSaveNetworkSettings": "Successfully updated %{setting} settings."
+     }
+   },
++  "pageRemoteLogs": {
++    "addNewRemoteLog": "Add new rsyslog configuration",
++    "deleteRemoteLog": "Delete rsyslog configuration",
++    "editRemoteLog": "Edit rsyslog configuration",
++    "addNewRemoteEmailLog": "Add new remote log email configuration",
++    "deleteRemoteEmailLog": "Delete remote log email configuration",
++    "editRemoteEmailLog": "Edit remote log email configuration",
++    "addNewRemoteSNMPLog": "Add new remote log SNMP configuration",
++    "deleteRemoteSNMPLog": "Delete remote log SNMP configuration",
++    "editRemoteSNMPLog": "Edit remote log SNMP configuration",
++    "modal": {
++      "deleteConfirmMessage": "Are you sure you want to delete record for rsyslog server %{server}:%{serverPort}? This action cannot be undone.",
++      "deleteEmailConfirmMessage": "Are you sure you want to delete record for email server %{server}:%{serverPort}? This action cannot be undone.",
++      "deleteSNMPConfirmMessage": "Are you sure you want to delete record for SNMP server %{server}:%{serverPort}? This action cannot be undone.",
++      "severity": "Severity",
++      "substr": "Filter substring",
++      "server": "Remote server",
++      "serverPort": "Remote server port",
++      "connType": "Connection type",
++      "userName": "User name",
++      "userPass": "User password",
++      "srcEmail": "Source email",
++      "destEmail": "Destination email"
++    },
++    "table": {
++      "id": "Number",
++      "severity": "Severity",
++      "substr": "Filter substring",
++      "server": "Remote server",
++      "serverPort": "Remote server port",
++      "connType": "Connection type",
++      "userName": "User name",
++      "userPass": "User password",
++      "srcEmail": "Source email",
++      "destEmail": "Destination email"
++    },
++    "toast": {
++      "errorAddRemoteLog": "Error adding rsyslog configuration.",
++      "successAddRemoteLog": "Successfully added %{server}:%{serverPort} rsyslog configuration.",
++      "errorDeleteRemoteLog": "Error deleting rsyslog configuration.",
++      "successDeleteRemoteLog": "Successfully deleted %{server}:%{serverPort} rsyslog configuration.",
++      "errorUpdateRemoteLog": "Error updating rsyslog configuration.",
++      "successUpdateRemoteLog": "Successfully updated %{server}:%{serverPort} rsyslog configuration.",
++      "errorAddRemoteEmailLog": "Error adding remote log email configuration.",
++      "successAddRemoteEmailLog": "Successfully added %{server}:%{serverPort} remote log email configuration.",
++      "errorDeleteRemoteEmailLog": "Error deleting remote log email configuration.",
++      "successDeleteRemoteEmailLog": "Successfully deleted %{server}:%{serverPort} remote log email configuration.",
++      "errorUpdateRemoteEmailLog": "Error updating remote log email configuration.",
++      "successUpdateRemoteEmailLog": "Successfully updated %{server}:%{serverPort} remote log email configuration.",
++      "errorAddRemoteSNMPLog": "Error adding remote log SNMP configuration.",
++      "successAddRemoteSNMPLog": "Successfully added %{server}:%{serverPort} remote log SNMP configuration.",
++      "errorDeleteRemoteSNMPLog": "Error deleting remote log SNMP configuration.",
++      "successDeleteRemoteSNMPLog": "Successfully deleted %{server}:%{serverPort} remote log SNMP configuration.",
++      "errorUpdateRemoteSNMPLog": "Error updating remote log SNMP configuration.",
++      "successUpdateRemoteSNMPLog": "Successfully updated %{server}:%{serverPort} remote log SNMP configuration."
++    }
++  },
+   "pagePageNotFound": {
+     "description": "The requested resource could not be found."
+   },
+diff -r -u --new-file a/src/locales/ru-RU.json b/src/locales/ru-RU.json
+--- a/src/locales/ru-RU.json	2022-09-04 16:42:27.219873331 +0300
++++ b/src/locales/ru-RU.json	2022-09-06 20:31:24.065945885 +0300
+@@ -106,6 +106,8 @@
+     "dateTime": "@:appPageTitle.dateTime",
+     "dumps": "@:appPageTitle.dumps",
+     "eventLogs": "@:appPageTitle.eventLogs",
++    "eventLogs1": "@:appPageTitle.eventLogs1",
++    "eventLogs2": "@:appPageTitle.eventLogs2",
+     "factoryReset": "@:appPageTitle.factoryReset",
+     "firmware": "@:appPageTitle.firmware",
+     "hardwareStatus": "Статус оборудования",
+@@ -115,6 +117,7 @@
+     "logs": "Логи",
+     "userManagement": "@:appPageTitle.userManagement",
+     "network": "@:appPageTitle.network",
++    "remoteLogs": "@:appPageTitle.remoteLogs",
+     "overview": "@:appPageTitle.overview",
+     "primaryNavigation": "Основная навигация",
+     "postCodeLogs": "@:appPageTitle.postCodeLogs",
+@@ -134,7 +137,9 @@
+     "sessions": "Сессии",
+     "dateTime": "Дата и время",
+     "dumps": "Дампы",
+-    "eventLogs": "Журнал событий",
++    "eventLogs": "Журнал BMC",
++    "eventLogs1": "Журнал системных событий",
++    "eventLogs2": "Журнал событий безопасности",
+     "factoryReset": "Сброс до заводских настроек",
+     "firmware": "Встроенное ПО",
+     "inventory": "Перечень оборудования и LED",
+@@ -143,6 +148,7 @@
+     "userManagement": "Управление пользователями",
+     "login": "Логин",
+     "network": "Сеть",
++    "remoteLogs": "Сетевые журналы",
+     "overview": "Обзор",
+     "pageNotFound": "Страница не найдена",
+     "postCodeLogs": "Логи POST кодов",
+@@ -680,6 +686,63 @@
+       "successSaveNetworkSettings": "Успешно обновлено %{setting} настроек."
+     }
+   },
++  "pageRemoteLogs": {
++    "addNewRemoteLog": "Добавить новую rsyslog конфигурацию",
++    "deleteRemoteLog": "Удалить rsyslog конфигурацию",
++    "editRemoteLog": "Редактировать rsyslog конфигурацию",
++    "addNewRemoteEmailLog": "Добавить новую email конфигурацию удаленного журнала",
++    "deleteRemoteEmailLog": "Удалить email конфигурацию удаленного журнала",
++    "editRemoteEmailLog": "Редактировать email конфигурацию удаленного журнала",
++    "addNewRemoteSNMPLog": "Добавить новую SNMP конфигурацию удаленного журнала",
++    "deleteRemoteSNMPLog": "Удалить SNMP конфигурацию удаленного журнала",
++    "editRemoteSNMPLog": "Редактировать SNMP конфигурацию удаленного журнала",
++    "modal": {
++      "deleteConfirmMessage": "Вы уверены, что хотите удалить запись для rsyslog сервера %{server}:%{serverPort}? Это действие нельзя отменить.",
++      "deleteEmailConfirmMessage": "Вы уверены, что хотите удалить запись для email сервера %{server}:%{serverPort}? Это действие нельзя отменить.",
++      "deleteSNMPConfirmMessage": "Вы уверены, что хотите удалить запись для SNMP сервера %{server}:%{serverPort}? Это действие нельзя отменить.",
++      "severity": "Уровень",
++      "substr": "Подстрока для выбора",
++      "server": "Удаленный сервер",
++      "serverPort": "Порт на удаленном сервере",
++      "connType": "Тип соединения",
++      "userName": "Имя пользователя",
++      "userPass": "Пароль",
++      "srcEmail": "Email отправителя",
++      "destEmail": "Email получателя"
++    },
++    "table": {
++      "id": "Номер",
++      "severity": "Уровень",
++      "substr": "Подстрока для выбора",
++      "server": "Удаленный сервер",
++      "serverPort": "Порт на удаленном сервере",
++      "connType": "Тип соединения",
++      "userName": "Имя пользователя",
++      "userPass": "Пароль",
++      "srcEmail": "Email отправителя",
++      "destEmail": "Email получателя"
++    },
++    "toast": {
++      "errorAddRemoteLog": "Ошибка создания rsyslog конфигурации.",
++      "successAddRemoteLog": "Успешное создание %{server}:%{serverPort} rsyslog конфигурации.",
++      "errorDeleteRemoteLog": "Ошибка удаления rsyslog конфигурации.",
++      "successDeleteRemoteLog": "Успешное удаление %{server}:%{serverPort} rsyslog конфигурации.",
++      "errorUpdateRemoteLog": "Ошибка обновления rsyslog конфигурации.",
++      "successUpdateRemoteLog": "Успешное обновление %{server}:%{serverPort} rsyslog конфигурации.",
++      "errorAddRemoteEmailLog": "Ошибка создания email конфигурацию удаленного журнала.",
++      "successAddRemoteEmailLog": "Успешное создание %{server}:%{serverPort} email конфигурацию удаленного журнала.",
++      "errorDeleteRemoteEmailLog": "Ошибка удаления email конфигурацию удаленного журнала.",
++      "successDeleteRemoteEmailLog": "Успешное удаление %{server}:%{serverPort} email конфигурацию удаленного журнала.",
++      "errorUpdateRemoteEmailLog": "Ошибка обновления email конфигурацию удаленного журнала.",
++      "successUpdateRemoteEmailLog": "Успешное обновление %{server}:%{serverPort} email конфигурацию удаленного журнала.",
++      "errorAddRemoteSNMPLog": "Ошибка создания SNMP конфигурацию удаленного журнала.",
++      "successAddRemoteSNMPLog": "Успешное создание %{server}:%{serverPort} SNMP конфигурацию удаленного журнала.",
++      "errorDeleteRemoteSNMPLog": "Ошибка удаления SNMP конфигурацию удаленного журнала.",
++      "successDeleteRemoteSNMPLog": "Успешное удаление %{server}:%{serverPort} SNMP конфигурацию удаленного журнала.",
++      "errorUpdateRemoteSNMPLog": "Ошибка обновления SNMP конфигурацию удаленного журнала.",
++      "successUpdateRemoteSNMPLog": "Успешное обновление %{server}:%{serverPort} SNMP конфигурацию удаленного журнала."
++    }
++  },
+   "pagePageNotFound": {
+     "description": "Запрашиваемый ресурс не найден."
+   },
+diff -r -u --new-file a/src/router/routes.js b/src/router/routes.js
+--- a/src/router/routes.js	2022-09-04 16:42:27.219873331 +0300
++++ b/src/router/routes.js	2022-09-06 20:31:24.065945885 +0300
+@@ -3,6 +3,8 @@
+ import ConsoleLayout from '@/layouts/ConsoleLayout.vue';
+ import DateTime from '@/views/Settings/DateTime';
+ import EventLogs from '@/views/Logs/EventLogs';
++import EventLogs1 from '@/views/Logs/EventLogs1';
++import EventLogs2 from '@/views/Logs/EventLogs2';
+ import FactoryReset from '@/views/Operations/FactoryReset';
+ import Firmware from '@/views/Operations/Firmware';
+ import Inventory from '@/views/HardwareStatus/Inventory';
+@@ -14,6 +16,7 @@
+ import Login from '@/views/Login';
+ import LoginLayout from '@/layouts/LoginLayout';
+ import Network from '@/views/Settings/Network';
++import RemoteLogs from '@/views/Settings/RemoteLogs';
+ import Overview from '@/views/Overview';
+ import PageNotFound from '@/views/PageNotFound';
+ import PostCodeLogs from '@/views/Logs/PostCodeLogs';
+@@ -111,6 +114,22 @@
+         },
+       },
+       {
++        path: '/logs/event-logs1',
++        name: 'event-logs1',
++        component: EventLogs1,
++        meta: {
++          title: i18n.t('appPageTitle.eventLogs1'),
++        },
++      },
++      {
++        path: '/logs/event-logs2',
++        name: 'event-logs2',
++        component: EventLogs2,
++        meta: {
++          title: i18n.t('appPageTitle.eventLogs2'),
++        },
++      },
++      {
+         path: '/logs/post-code-logs',
+         name: 'post-code-logs',
+         component: PostCodeLogs,
+@@ -215,6 +234,14 @@
+         },
+       },
+       {
++        path: '/settings/remote-logs',
++        name: 'remote-logs',
++        component: RemoteLogs,
++        meta: {
++          title: i18n.t('appPageTitle.remoteLogs'),
++        },
++      },
++      {
+         path: '/settings/power-restore-policy',
+         name: 'power-restore-policy',
+         component: PowerRestorePolicy,
+diff -r -u --new-file a/src/store/index.js b/src/store/index.js
+--- a/src/store/index.js	2022-09-04 16:42:27.223873296 +0300
++++ b/src/store/index.js	2022-09-06 20:31:24.221944597 +0300
+@@ -13,6 +13,9 @@
+ import PowerControlStore from './modules/ResourceManagement/PowerControlStore';
+ import PowerPolicyStore from './modules/Settings/PowerPolicyStore';
+ import NetworkStore from './modules/Settings/NetworkStore';
++import RemoteLogsStore from './modules/Settings/RemoteLogsStore';
++import RemoteEmailLogsStore from './modules/Settings/RemoteEmailLogsStore';
++import RemoteSNMPLogsStore from './modules/Settings/RemoteSNMPLogsStore';
+ import EventLogStore from './modules/Logs/EventLogStore';
+ import SensorsStore from './modules/HardwareStatus/SensorsStore';
+ import ServerLedStore from './modules/HardwareStatus/ServerLedStore';
+@@ -52,6 +55,9 @@
+     powerPolicy: PowerPolicyStore,
+     powerSupply: PowerSupplyStore,
+     network: NetworkStore,
++    remoteLogs: RemoteLogsStore,
++    remoteEmailLogs: RemoteEmailLogsStore,
++    remoteSNMPLogs: RemoteSNMPLogsStore,
+     eventLog: EventLogStore,
+     sensors: SensorsStore,
+     serverLed: ServerLedStore,
+diff -r -u --new-file a/src/store/modules/Logs/EventLogStore.js b/src/store/modules/Logs/EventLogStore.js
+--- a/src/store/modules/Logs/EventLogStore.js	2022-09-04 16:42:27.223873296 +0300
++++ b/src/store/modules/Logs/EventLogStore.js	2022-09-06 20:31:24.221944597 +0300
+@@ -3,15 +3,15 @@
+ 
+ const getHealthStatus = (events, loadedEvents) => {
+   let status = loadedEvents ? 'OK' : '';
+-  for (const event of events) {
+-    if (event.severity === 'Warning') {
+-      status = 'Warning';
+-    }
+-    if (event.severity === 'Critical') {
+-      status = 'Critical';
+-      break;
+-    }
+-  }
++  //for (const event of events) {
++  //  if (event.severity === 'Warning') {
++  //    status = 'Warning';
++  //  }
++  //  if (event.severity === 'Critical') {
++  //    status = 'Critical';
++  //    break;
++  //  }
++  //}
+   return status;
+ };
+ 
+@@ -39,8 +39,10 @@
+   },
+   actions: {
+     async getEventLogData({ commit }) {
++      console.log('EventLogStore::getEventLogData');
+       return await api
+         .get('/redfish/v1/Systems/system/LogServices/EventLog/Entries')
++        //.get('/redfish/v1/Managers/bmc/LogServices/Journal/Entries')
+         .then(({ data: { Members = [] } = {} }) => {
+           const eventLogs = Members.map((log) => {
+             const {
+diff -r -u --new-file a/src/store/modules/Settings/RemoteEmailLogsStore.js b/src/store/modules/Settings/RemoteEmailLogsStore.js
+--- a/src/store/modules/Settings/RemoteEmailLogsStore.js	1970-01-01 03:00:00.000000000 +0300
++++ b/src/store/modules/Settings/RemoteEmailLogsStore.js	2022-09-06 20:31:24.221944597 +0300
+@@ -0,0 +1,165 @@
++import api from '@/store/api';
++import i18n from '@/i18n';
++
++const RemoteEmailLogsStore = {
++  namespaced: true,
++  state: {
++    allRemoteEmailLogs: [],
++  },
++  getters: {
++    allRemoteEmailLogs: (state) => state.allRemoteEmailLogs,
++  },
++  mutations: {
++    setRemoteEmailLogs(state, remoteEmailLogs) {
++      state.allRemoteEmailLogs = remoteEmailLogs;
++    },
++  },
++  actions: {
++    async getRemoteEmailLogs({ commit }) {
++      return await api
++        .get(
++          '/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Entries'
++        )
++        .then(({ data: { Members = [] } = {} }) => {
++          const remoteEmailLogs = Members.map((data) => {
++            const {
++              Id,
++              Severity,
++              Substr,
++              EntryType,
++              Server,
++              ServerPort,
++              ConnType,
++              UserName,
++              UserPass,
++              SrcEmail,
++              DestEmail,
++            } = data;
++            return {
++              id: Id,
++              location: data['@odata.id'],
++              severity: Severity,
++              type: EntryType,
++              substr: Substr,
++              server: Server,
++              serverPort: ServerPort,
++              connType: ConnType,
++              userName: UserName,
++              userPass: UserPass,
++              srcEmail: SrcEmail,
++              destEmail: DestEmail,
++            };
++          });
++          commit('setRemoteEmailLogs', remoteEmailLogs);
++        })
++        .catch((error) => {
++          console.log('Remote Email Logs Data:', error);
++        });
++    },
++    async addNewRemoteEmailLog(
++      { dispatch },
++      {
++        severity,
++        substr,
++        server,
++        serverPort,
++        connType,
++        userName,
++        userPass,
++        srcEmail,
++        destEmail,
++      }
++    ) {
++      const data = {};
++      data.Severity = severity;
++      data.Substr = substr;
++      data.Server = server;
++      data.ServerPort = serverPort;
++      data.ConnType = connType;
++      data.UserName = userName;
++      data.UserPass = userPass;
++      data.SrcEmail = srcEmail;
++      data.DestEmail = destEmail;
++
++      return await api
++        .patch(
++          '/redfish/v1/Systems/system/LogServices/EventLog/Remote/Email/Entries/0',
++          data
++        )
++        .then(() => dispatch('getRemoteEmailLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successAddRemoteEmailLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(
++            i18n.t('pageRemoteLogs.toast.errorAddRemoteEmailLog')
++          );
++        });
++    },
++    async updateRemoteEmailLog(
++      { dispatch },
++      {
++        severity,
++        substr,
++        server,
++        serverPort,
++        connType,
++        userName,
++        userPass,
++        srcEmail,
++        destEmail,
++        location,
++      }
++    ) {
++      const data = {};
++      data.Severity = severity;
++      data.Substr = substr;
++      data.Server = server;
++      data.ServerPort = serverPort;
++      data.ConnType = connType;
++      data.UserName = userName;
++      data.UserPass = userPass;
++      data.SrcEmail = srcEmail;
++      data.DestEmail = destEmail;
++
++      return await api
++        .patch(location, data)
++        .then(() => dispatch('getRemoteEmailLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successUpdateRemoteEmailLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(
++            i18n.t('pageRemoteLogs.toast.errorUpdateRemoteEmailLog')
++          );
++        });
++    },
++    async deleteRemoteEmailLog({ dispatch }, { server, serverPort, location }) {
++      return await api
++        .delete(location)
++        .then(() => dispatch('getRemoteEmailLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successDeleteRemoteEmailLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(
++            i18n.t('pageRemoteLogs.toast.errorDeleteRemoteEmailLog')
++          );
++        });
++    },
++  },
++};
++
++export default RemoteEmailLogsStore;
+diff -r -u --new-file a/src/store/modules/Settings/RemoteLogsStore.js b/src/store/modules/Settings/RemoteLogsStore.js
+--- a/src/store/modules/Settings/RemoteLogsStore.js	1970-01-01 03:00:00.000000000 +0300
++++ b/src/store/modules/Settings/RemoteLogsStore.js	2022-09-06 20:31:24.221944597 +0300
+@@ -0,0 +1,120 @@
++import api from '@/store/api';
++import i18n from '@/i18n';
++
++const RemoteLogsStore = {
++  namespaced: true,
++  state: {
++    allRemoteLogs: [],
++  },
++  getters: {
++    allRemoteLogs: (state) => state.allRemoteLogs,
++  },
++  mutations: {
++    setRemoteLogs(state, remoteLogs) {
++      state.allRemoteLogs = remoteLogs;
++    },
++  },
++  actions: {
++    async getRemoteLogs({ commit }) {
++      return await api
++        .get('/redfish/v1/Systems/system/LogServices/EventLog/Remote/Entries')
++        .then(({ data: { Members = [] } = {} }) => {
++          const remoteLogs = Members.map((data) => {
++            const {
++              Id,
++              Severity,
++              Substr,
++              EntryType,
++              Server,
++              ServerPort,
++              ConnType,
++            } = data;
++            return {
++              id: Id,
++              location: data['@odata.id'],
++              severity: Severity,
++              type: EntryType,
++              substr: Substr,
++              server: Server,
++              serverPort: ServerPort,
++              connType: ConnType,
++            };
++          });
++          commit('setRemoteLogs', remoteLogs);
++        })
++        .catch((error) => {
++          console.log('Remote Logs Data:', error);
++        });
++    },
++    async addNewRemoteLog(
++      { dispatch },
++      { severity, substr, server, serverPort, connType }
++    ) {
++      const data = {};
++      data.Severity = severity;
++      data.Substr = substr;
++      data.Server = server;
++      data.ServerPort = serverPort;
++      data.ConnType = connType;
++
++      return await api
++        .patch(
++          '/redfish/v1/Systems/system/LogServices/EventLog/Remote/Entries/0',
++          data
++        )
++        .then(() => dispatch('getRemoteLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successAddRemoteLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(i18n.t('pageRemoteLogs.toast.errorAddRemoteLog'));
++        });
++    },
++    async updateRemoteLog(
++      { dispatch },
++      { severity, substr, server, serverPort, connType, location }
++    ) {
++      const data = {};
++      data.Severity = severity;
++      data.Substr = substr;
++      data.Server = server;
++      data.ServerPort = serverPort;
++      data.ConnType = connType;
++
++      return await api
++        .patch(location, data)
++        .then(() => dispatch('getRemoteLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successUpdateRemoteLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(i18n.t('pageRemoteLogs.toast.errorUpdateRemoteLog'));
++        });
++    },
++    async deleteRemoteLog({ dispatch }, { server, serverPort, location }) {
++      return await api
++        .delete(location)
++        .then(() => dispatch('getRemoteLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successDeleteRemoteLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(i18n.t('pageRemoteLogs.toast.errorDeleteRemoteLog'));
++        });
++    },
++  },
++};
++
++export default RemoteLogsStore;
+diff -r -u --new-file a/src/store/modules/Settings/RemoteSNMPLogsStore.js b/src/store/modules/Settings/RemoteSNMPLogsStore.js
+--- a/src/store/modules/Settings/RemoteSNMPLogsStore.js	1970-01-01 03:00:00.000000000 +0300
++++ b/src/store/modules/Settings/RemoteSNMPLogsStore.js	2022-09-06 20:31:24.221944597 +0300
+@@ -0,0 +1,121 @@
++import api from '@/store/api';
++import i18n from '@/i18n';
++
++const RemoteSNMPLogsStore = {
++  namespaced: true,
++  state: {
++    allRemoteSNMPLogs: [],
++  },
++  getters: {
++    allRemoteSNMPLogs: (state) => state.allRemoteSNMPLogs,
++  },
++  mutations: {
++    setRemoteSNMPLogs(state, remoteSNMPLogs) {
++      state.allRemoteSNMPLogs = remoteSNMPLogs;
++    },
++  },
++  actions: {
++    async getRemoteSNMPLogs({ commit }) {
++      return await api
++        .get(
++          '/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Entries'
++        )
++        .then(({ data: { Members = [] } = {} }) => {
++          const remoteSNMPLogs = Members.map((data) => {
++            const {
++              Id,
++              Severity,
++              Substr,
++              EntryType,
++              Server,
++              ServerPort,
++            } = data;
++            return {
++              id: Id,
++              location: data['@odata.id'],
++              severity: Severity,
++              type: EntryType,
++              substr: Substr,
++              server: Server,
++              serverPort: ServerPort,
++            };
++          });
++          commit('setRemoteSNMPLogs', remoteSNMPLogs);
++        })
++        .catch((error) => {
++          console.log('Remote SNMP Logs Data:', error);
++        });
++    },
++    async addNewRemoteSNMPLog(
++      { dispatch },
++      { severity, substr, server, serverPort }
++    ) {
++      const data = {};
++      data.Severity = severity;
++      data.Substr = substr;
++      data.Server = server;
++      data.ServerPort = serverPort;
++
++      return await api
++        .patch(
++          '/redfish/v1/Systems/system/LogServices/EventLog/Remote/SNMP/Entries/0',
++          data
++        )
++        .then(() => dispatch('getRemoteSNMPLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successAddRemoteSNMPLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(i18n.t('pageRemoteLogs.toast.errorAddRemoteSNMPLog'));
++        });
++    },
++    async updateRemoteSNMPLog(
++      { dispatch },
++      { severity, substr, server, serverPort, location }
++    ) {
++      const data = {};
++      data.Severity = severity;
++      data.Substr = substr;
++      data.Server = server;
++      data.ServerPort = serverPort;
++      return await api
++        .patch(location, data)
++        .then(() => dispatch('getRemoteSNMPLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successUpdateRemoteSNMPLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(
++            i18n.t('pageRemoteLogs.toast.errorUpdateRemoteSNMPLog')
++          );
++        });
++    },
++    async deleteRemoteSNMPLog({ dispatch }, { server, serverPort, location }) {
++      return await api
++        .delete(location)
++        .then(() => dispatch('getRemoteSNMPLogs'))
++        .then(() =>
++          i18n.t('pageRemoteLogs.toast.successDeleteRemoteSNMPLog', {
++            server: server,
++            serverPort: serverPort,
++          })
++        )
++        .catch((error) => {
++          console.log(error);
++          throw new Error(
++            i18n.t('pageRemoteLogs.toast.errorDeleteRemoteSNMPLog')
++          );
++        });
++    },
++  },
++};
++
++export default RemoteSNMPLogsStore;
+diff -r -u --new-file a/src/views/Logs/EventLogs/EventLogs.vue b/src/views/Logs/EventLogs/EventLogs.vue
+--- a/src/views/Logs/EventLogs/EventLogs.vue	2022-09-04 16:42:27.227873262 +0300
++++ b/src/views/Logs/EventLogs/EventLogs.vue	2022-09-06 20:31:24.069945853 +0300
+@@ -160,7 +160,10 @@
+ 
+           <!-- Severity column -->
+           <template #cell(severity)="{ value }">
+-            <status-icon v-if="value" :status="statusIcon(value)" />
++            <status-icon
++              v-if="value"
++              :status="statusIcon(value == 'Info' ? 'OK' : value)"
++            />
+             {{ value }}
+           </template>
+           <!-- Date column -->
+@@ -361,7 +364,7 @@
+         {
+           key: 'severity',
+           label: this.$t('pageEventLogs.table.severity'),
+-          values: ['OK', 'Warning', 'Critical'],
++          values: ['Info', 'Warning', 'Critical'],
+         },
+         {
+           key: 'filterByStatus',
+@@ -425,12 +428,19 @@
+         this.filterEndDate
+       );
+     },
+-    filteredLogs() {
++    filteredLogs1() {
+       return this.getFilteredTableData(
+         this.filteredLogsByDate,
+         this.activeFilters
+       );
+     },
++    filteredLogs() {
++      const my_filters = [
++        { key: 'description', values: 'phosphor' },
++        { key: 'description', values: 'bmc' },
++      ];
++      return this.getFilteredTableData1(this.filteredLogs1, my_filters);
++    },
+   },
+   created() {
+     this.startLoader();
+diff -r -u --new-file a/src/views/Logs/EventLogs1/EventLogs1.vue b/src/views/Logs/EventLogs1/EventLogs1.vue
+--- a/src/views/Logs/EventLogs1/EventLogs1.vue	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Logs/EventLogs1/EventLogs1.vue	2022-09-06 20:31:24.073945819 +0300
+@@ -0,0 +1,607 @@
++<template>
++  <b-container fluid="xl">
++    <page-title />
++    <b-row class="align-items-start">
++      <b-col sm="8" xl="6" class="d-sm-flex align-items-end mb-4">
++        <search
++          :placeholder="$t('pageEventLogs.table.searchLogs')"
++          data-test-id="eventLogs-input-searchLogs"
++          @change-search="onChangeSearchInput"
++          @clear-search="onClearSearchInput"
++        />
++        <div class="ml-sm-4">
++          <table-cell-count
++            :filtered-items-count="filteredRows"
++            :total-number-of-cells="allLogs.length"
++          ></table-cell-count>
++        </div>
++      </b-col>
++      <b-col sm="8" md="7" xl="6">
++        <table-date-filter @change="onChangeDateTimeFilter" />
++      </b-col>
++    </b-row>
++    <b-row>
++      <b-col class="text-right">
++        <table-filter :filters="tableFilters" @filter-change="onFilterChange" />
++        <b-button
++          variant="link"
++          :disabled="allLogs.length === 0"
++          @click="deleteAllLogs"
++        >
++          <icon-delete /> {{ $t('global.action.deleteAll') }}
++        </b-button>
++        <b-button
++          variant="primary"
++          :class="{ disabled: allLogs.length === 0 }"
++          :download="exportFileNameByDate()"
++          :href="href"
++        >
++          <icon-export /> {{ $t('global.action.exportAll') }}
++        </b-button>
++      </b-col>
++    </b-row>
++    <b-row>
++      <b-col>
++        <table-toolbar
++          ref="toolbar"
++          :selected-items-count="selectedRows.length"
++          :actions="batchActions"
++          @clear-selected="clearSelectedRows($refs.table)"
++          @batch-action="onBatchAction"
++        >
++          <template #toolbar-buttons>
++            <b-button variant="primary" @click="resolveLogs">
++              {{ $t('pageEventLogs.resolve') }}
++            </b-button>
++            <b-button variant="primary" @click="unresolveLogs">
++              {{ $t('pageEventLogs.unresolve') }}
++            </b-button>
++            <table-toolbar-export
++              :data="batchExportData"
++              :file-name="exportFileNameByDate()"
++            />
++          </template>
++        </table-toolbar>
++        <b-table
++          id="table-event-logs"
++          ref="table"
++          responsive="md"
++          selectable
++          no-select-on-click
++          sort-icon-left
++          hover
++          no-sort-reset
++          sort-desc
++          show-empty
++          sort-by="id"
++          :fields="fields"
++          :items="filteredLogs"
++          :sort-compare="onSortCompare"
++          :empty-text="$t('global.table.emptyMessage')"
++          :empty-filtered-text="$t('global.table.emptySearchMessage')"
++          :per-page="perPage"
++          :current-page="currentPage"
++          :filter="searchFilter"
++          @filtered="onFiltered"
++          @row-selected="onRowSelected($event, filteredLogs.length)"
++        >
++          <!-- Checkbox column -->
++          <template #head(checkbox)>
++            <b-form-checkbox
++              v-model="tableHeaderCheckboxModel"
++              data-test-id="eventLogs-checkbox-selectAll"
++              :indeterminate="tableHeaderCheckboxIndeterminate"
++              @change="onChangeHeaderCheckbox($refs.table)"
++            >
++              <span class="sr-only">{{ $t('global.table.selectAll') }}</span>
++            </b-form-checkbox>
++          </template>
++          <template #cell(checkbox)="row">
++            <b-form-checkbox
++              v-model="row.rowSelected"
++              :data-test-id="`eventLogs-checkbox-selectRow-${row.index}`"
++              @change="toggleSelectRow($refs.table, row.index)"
++            >
++              <span class="sr-only">{{ $t('global.table.selectItem') }}</span>
++            </b-form-checkbox>
++          </template>
++
++          <!-- Expand chevron icon -->
++          <template #cell(expandRow)="row">
++            <b-button
++              variant="link"
++              :aria-label="expandRowLabel"
++              :title="expandRowLabel"
++              class="btn-icon-only"
++              @click="toggleRowDetails(row)"
++            >
++              <icon-chevron />
++            </b-button>
++          </template>
++
++          <template #row-details="{ item }">
++            <b-container fluid>
++              <b-row>
++                <b-col>
++                  <dl>
++                    <!-- Name -->
++                    <dt>{{ $t('pageEventLogs.table.name') }}:</dt>
++                    <dd>{{ dataFormatter(item.name) }}</dd>
++                  </dl>
++                  <dl>
++                    <!-- Type -->
++                    <dt>{{ $t('pageEventLogs.table.type') }}:</dt>
++                    <dd>{{ dataFormatter(item.type) }}</dd>
++                  </dl>
++                </b-col>
++                <b-col>
++                  <dl>
++                    <!-- Modified date -->
++                    <dt>{{ $t('pageEventLogs.table.modifiedDate') }}:</dt>
++                    <dd v-if="item.modifiedDate">
++                      {{ item.modifiedDate | formatDate }}
++                      {{ item.modifiedDate | formatTime }}
++                    </dd>
++                    <dd v-else>--</dd>
++                  </dl>
++                </b-col>
++                <b-col class="text-nowrap">
++                  <b-button
++                    class="btn btn-secondary float-right"
++                    :href="item.additionalDataUri"
++                    target="_blank"
++                  >
++                    <icon-download />{{ $t('pageEventLogs.additionalDataUri') }}
++                  </b-button>
++                </b-col>
++              </b-row>
++            </b-container>
++          </template>
++
++          <!-- Severity column -->
++          <template #cell(severity)="{ value }">
++            <status-icon
++              v-if="value"
++              :status="statusIcon(value == 'Info' ? 'OK' : value)"
++            />
++            {{ value }}
++          </template>
++          <!-- Date column -->
++          <template #cell(date)="{ value }">
++            <p class="mb-0">{{ value | formatDate }}</p>
++            <p class="mb-0">{{ value | formatTime }}</p>
++          </template>
++
++          <!-- Status column -->
++          <template #cell(status)="row">
++            <b-form-checkbox
++              v-model="row.item.status"
++              name="switch"
++              switch
++              @change="changelogStatus(row.item)"
++            >
++              <span v-if="row.item.status">
++                {{ $t('pageEventLogs.resolved') }}
++              </span>
++              <span v-else> {{ $t('pageEventLogs.unresolved') }} </span>
++            </b-form-checkbox>
++          </template>
++          <template #cell(filterByStatus)="{ value }">
++            {{ value }}
++          </template>
++
++          <!-- Actions column -->
++          <template #cell(actions)="row">
++            <table-row-action
++              v-for="(action, index) in row.item.actions"
++              :key="index"
++              :value="action.value"
++              :title="action.title"
++              :row-data="row.item"
++              :export-name="exportFileNameByDate('export')"
++              :data-test-id="`eventLogs-button-deleteRow-${row.index}`"
++              @click-table-action="onTableRowAction($event, row.item)"
++            >
++              <template #icon>
++                <icon-export v-if="action.value === 'export'" />
++                <icon-trashcan v-if="action.value === 'delete'" />
++              </template>
++            </table-row-action>
++          </template>
++        </b-table>
++      </b-col>
++    </b-row>
++
++    <!-- Table pagination -->
++    <b-row>
++      <b-col sm="6">
++        <b-form-group
++          class="table-pagination-select"
++          :label="$t('global.table.itemsPerPage')"
++          label-for="pagination-items-per-page"
++        >
++          <b-form-select
++            id="pagination-items-per-page"
++            v-model="perPage"
++            :options="itemsPerPageOptions"
++          />
++        </b-form-group>
++      </b-col>
++      <b-col sm="6">
++        <b-pagination
++          v-model="currentPage"
++          first-number
++          last-number
++          :per-page="perPage"
++          :total-rows="getTotalRowCount(filteredRows)"
++          aria-controls="table-event-logs"
++        />
++      </b-col>
++    </b-row>
++  </b-container>
++</template>
++
++<script>
++import IconDelete from '@carbon/icons-vue/es/trash-can/20';
++import IconTrashcan from '@carbon/icons-vue/es/trash-can/20';
++import IconExport from '@carbon/icons-vue/es/document--export/20';
++import IconChevron from '@carbon/icons-vue/es/chevron--down/20';
++import IconDownload from '@carbon/icons-vue/es/download/20';
++import { omit } from 'lodash';
++
++import PageTitle from '@/components/Global/PageTitle';
++import StatusIcon from '@/components/Global/StatusIcon';
++import Search from '@/components/Global/Search';
++import TableCellCount from '@/components/Global/TableCellCount';
++import TableDateFilter from '@/components/Global/TableDateFilter';
++import TableFilter from '@/components/Global/TableFilter';
++import TableRowAction from '@/components/Global/TableRowAction';
++import TableToolbar from '@/components/Global/TableToolbar';
++import TableToolbarExport from '@/components/Global/TableToolbarExport';
++
++import LoadingBarMixin from '@/components/Mixins/LoadingBarMixin';
++import TableFilterMixin from '@/components/Mixins/TableFilterMixin';
++import BVPaginationMixin, {
++  currentPage,
++  perPage,
++  itemsPerPageOptions,
++} from '@/components/Mixins/BVPaginationMixin';
++import BVTableSelectableMixin, {
++  selectedRows,
++  tableHeaderCheckboxModel,
++  tableHeaderCheckboxIndeterminate,
++} from '@/components/Mixins/BVTableSelectableMixin';
++import BVToastMixin from '@/components/Mixins/BVToastMixin';
++import DataFormatterMixin from '@/components/Mixins/DataFormatterMixin';
++import TableSortMixin from '@/components/Mixins/TableSortMixin';
++import TableRowExpandMixin, {
++  expandRowLabel,
++} from '@/components/Mixins/TableRowExpandMixin';
++import SearchFilterMixin, {
++  searchFilter,
++} from '@/components/Mixins/SearchFilterMixin';
++
++export default {
++  components: {
++    IconDelete,
++    IconExport,
++    IconTrashcan,
++    IconChevron,
++    IconDownload,
++    PageTitle,
++    Search,
++    StatusIcon,
++    TableCellCount,
++    TableFilter,
++    TableRowAction,
++    TableToolbar,
++    TableToolbarExport,
++    TableDateFilter,
++  },
++  mixins: [
++    BVPaginationMixin,
++    BVTableSelectableMixin,
++    BVToastMixin,
++    LoadingBarMixin,
++    TableFilterMixin,
++    DataFormatterMixin,
++    TableSortMixin,
++    TableRowExpandMixin,
++    SearchFilterMixin,
++  ],
++  beforeRouteLeave(to, from, next) {
++    // Hide loader if the user navigates to another page
++    // before request is fulfilled.
++    this.hideLoader();
++    next();
++  },
++  data() {
++    return {
++      fields: [
++        {
++          key: 'expandRow',
++          label: '',
++          tdClass: 'table-row-expand',
++        },
++        {
++          key: 'checkbox',
++          sortable: false,
++        },
++        {
++          key: 'id',
++          label: this.$t('pageEventLogs.table.id'),
++          sortable: true,
++        },
++        {
++          key: 'severity',
++          label: this.$t('pageEventLogs.table.severity'),
++          sortable: true,
++          tdClass: 'text-nowrap',
++        },
++        {
++          key: 'date',
++          label: this.$t('pageEventLogs.table.date'),
++          sortable: true,
++          tdClass: 'text-nowrap',
++        },
++        {
++          key: 'description',
++          label: this.$t('pageEventLogs.table.description'),
++          tdClass: 'text-break',
++        },
++        {
++          key: 'status',
++          label: this.$t('pageEventLogs.table.status'),
++        },
++        {
++          key: 'actions',
++          sortable: false,
++          label: '',
++          tdClass: 'text-right text-nowrap',
++        },
++      ],
++      tableFilters: [
++        {
++          key: 'severity',
++          label: this.$t('pageEventLogs.table.severity'),
++          values: ['Info', 'Warning', 'Critical'],
++        },
++        {
++          key: 'filterByStatus',
++          label: this.$t('pageEventLogs.table.status'),
++          values: ['Resolved', 'Unresolved'],
++        },
++      ],
++      expandRowLabel,
++      activeFilters: [],
++      batchActions: [
++        {
++          value: 'delete',
++          label: this.$t('global.action.delete'),
++        },
++      ],
++      currentPage: currentPage,
++      filterStartDate: null,
++      filterEndDate: null,
++      itemsPerPageOptions: itemsPerPageOptions,
++      perPage: perPage,
++      searchFilter: searchFilter,
++      searchTotalFilteredRows: 0,
++      selectedRows: selectedRows,
++      tableHeaderCheckboxModel: tableHeaderCheckboxModel,
++      tableHeaderCheckboxIndeterminate: tableHeaderCheckboxIndeterminate,
++    };
++  },
++  computed: {
++    href() {
++      return `data:text/json;charset=utf-8,${this.exportAllLogs()}`;
++    },
++    filteredRows() {
++      return this.searchFilter
++        ? this.searchTotalFilteredRows
++        : this.filteredLogs.length;
++    },
++    allLogs() {
++      return this.$store.getters['eventLog/allEvents'].map((event) => {
++        return {
++          ...event,
++          actions: [
++            {
++              value: 'export',
++              title: this.$t('global.action.export'),
++            },
++            {
++              value: 'delete',
++              title: this.$t('global.action.delete'),
++            },
++          ],
++        };
++      });
++    },
++    batchExportData() {
++      return this.selectedRows.map((row) => omit(row, 'actions'));
++    },
++    filteredLogsByDate() {
++      return this.getFilteredTableDataByDate(
++        this.allLogs,
++        this.filterStartDate,
++        this.filterEndDate
++      );
++    },
++    filteredLogs1() {
++      return this.getFilteredTableData(
++        this.filteredLogsByDate,
++        this.activeFilters
++      );
++    },
++    filteredLogs() {
++      const my_filters = [
++        { key: 'description', values: 'system' },
++        { key: 'description', values: 'ipmi' },
++      ];
++      return this.getFilteredTableData1(this.filteredLogs1, my_filters);
++    },
++  },
++  created() {
++    this.startLoader();
++    this.$store
++      .dispatch('eventLog/getEventLogData')
++      .finally(() => this.endLoader());
++  },
++  methods: {
++    changelogStatus(row) {
++      this.$store
++        .dispatch('eventLog/updateEventLogStatus', {
++          uri: row.uri,
++          status: row.status,
++        })
++        .then((success) => {
++          this.successToast(success);
++        })
++        .catch(({ message }) => this.errorToast(message));
++    },
++    deleteAllLogs() {
++      this.$bvModal
++        .msgBoxConfirm(this.$t('pageEventLogs.modal.deleteAllMessage'), {
++          title: this.$t('pageEventLogs.modal.deleteAllTitle'),
++          okTitle: this.$t('global.action.delete'),
++          okVariant: 'danger',
++          cancelTitle: this.$t('global.action.cancel'),
++        })
++        .then((deleteConfirmed) => {
++          if (deleteConfirmed) {
++            this.$store
++              .dispatch('eventLog/deleteAllEventLogs', this.allLogs)
++              .then((message) => this.successToast(message))
++              .catch(({ message }) => this.errorToast(message));
++          }
++        });
++    },
++    deleteLogs(uris) {
++      this.$store
++        .dispatch('eventLog/deleteEventLogs', uris)
++        .then((messages) => {
++          messages.forEach(({ type, message }) => {
++            if (type === 'success') {
++              this.successToast(message);
++            } else if (type === 'error') {
++              this.errorToast(message);
++            }
++          });
++        });
++    },
++    exportAllLogs() {
++      {
++        return this.$store.getters['eventLog/allEvents'].map((eventLogs) => {
++          const allEventLogsString = JSON.stringify(eventLogs);
++          return allEventLogsString;
++        });
++      }
++    },
++    onFilterChange({ activeFilters }) {
++      this.activeFilters = activeFilters;
++    },
++    onSortCompare(a, b, key) {
++      if (key === 'severity') {
++        return this.sortStatus(a, b, key);
++      }
++    },
++    onTableRowAction(action, { uri }) {
++      if (action === 'delete') {
++        this.$bvModal
++          .msgBoxConfirm(this.$tc('pageEventLogs.modal.deleteMessage'), {
++            title: this.$tc('pageEventLogs.modal.deleteTitle'),
++            okTitle: this.$t('global.action.delete'),
++            cancelTitle: this.$t('global.action.cancel'),
++          })
++          .then((deleteConfirmed) => {
++            if (deleteConfirmed) this.deleteLogs([uri]);
++          });
++      }
++    },
++    onBatchAction(action) {
++      if (action === 'delete') {
++        const uris = this.selectedRows.map((row) => row.uri);
++        this.$bvModal
++          .msgBoxConfirm(
++            this.$tc(
++              'pageEventLogs.modal.deleteMessage',
++              this.selectedRows.length
++            ),
++            {
++              title: this.$tc(
++                'pageEventLogs.modal.deleteTitle',
++                this.selectedRows.length
++              ),
++              okTitle: this.$t('global.action.delete'),
++              cancelTitle: this.$t('global.action.cancel'),
++            }
++          )
++          .then((deleteConfirmed) => {
++            if (deleteConfirmed) {
++              if (this.selectedRows.length === this.allLogs.length) {
++                this.$store
++                  .dispatch(
++                    'eventLog/deleteAllEventLogs',
++                    this.selectedRows.length
++                  )
++                  .then((message) => this.successToast(message))
++                  .catch(({ message }) => this.errorToast(message));
++              } else {
++                this.deleteLogs(uris);
++              }
++            }
++          });
++      }
++    },
++    onChangeDateTimeFilter({ fromDate, toDate }) {
++      this.filterStartDate = fromDate;
++      this.filterEndDate = toDate;
++    },
++    onFiltered(filteredItems) {
++      this.searchTotalFilteredRows = filteredItems.length;
++    },
++    // Create export file name based on date
++    exportFileNameByDate(value) {
++      let date = new Date();
++      date =
++        date.toISOString().slice(0, 10) +
++        '_' +
++        date.toString().split(':').join('-').split(' ')[4];
++      let fileName;
++      if (value === 'export') {
++        fileName = 'event_log_';
++      } else {
++        fileName = 'all_event_logs_';
++      }
++      return fileName + date;
++    },
++    resolveLogs() {
++      this.$store
++        .dispatch('eventLog/resolveEventLogs', this.selectedRows)
++        .then((messages) => {
++          messages.forEach(({ type, message }) => {
++            if (type === 'success') {
++              this.successToast(message);
++            } else if (type === 'error') {
++              this.errorToast(message);
++            }
++          });
++        });
++    },
++    unresolveLogs() {
++      this.$store
++        .dispatch('eventLog/unresolveEventLogs', this.selectedRows)
++        .then((messages) => {
++          messages.forEach(({ type, message }) => {
++            if (type === 'success') {
++              this.successToast(message);
++            } else if (type === 'error') {
++              this.errorToast(message);
++            }
++          });
++        });
++    },
++  },
++};
++</script>
+diff -r -u --new-file a/src/views/Logs/EventLogs1/index.js b/src/views/Logs/EventLogs1/index.js
+--- a/src/views/Logs/EventLogs1/index.js	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Logs/EventLogs1/index.js	2022-09-06 20:31:24.069945853 +0300
+@@ -0,0 +1,2 @@
++import EventLogs1 from './EventLogs1.vue';
++export default EventLogs1;
+diff -r -u --new-file a/src/views/Logs/EventLogs2/EventLogs2.vue b/src/views/Logs/EventLogs2/EventLogs2.vue
+--- a/src/views/Logs/EventLogs2/EventLogs2.vue	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Logs/EventLogs2/EventLogs2.vue	2022-09-06 20:31:24.073945819 +0300
+@@ -0,0 +1,607 @@
++<template>
++  <b-container fluid="xl">
++    <page-title />
++    <b-row class="align-items-start">
++      <b-col sm="8" xl="6" class="d-sm-flex align-items-end mb-4">
++        <search
++          :placeholder="$t('pageEventLogs.table.searchLogs')"
++          data-test-id="eventLogs-input-searchLogs"
++          @change-search="onChangeSearchInput"
++          @clear-search="onClearSearchInput"
++        />
++        <div class="ml-sm-4">
++          <table-cell-count
++            :filtered-items-count="filteredRows"
++            :total-number-of-cells="allLogs.length"
++          ></table-cell-count>
++        </div>
++      </b-col>
++      <b-col sm="8" md="7" xl="6">
++        <table-date-filter @change="onChangeDateTimeFilter" />
++      </b-col>
++    </b-row>
++    <b-row>
++      <b-col class="text-right">
++        <table-filter :filters="tableFilters" @filter-change="onFilterChange" />
++        <b-button
++          variant="link"
++          :disabled="allLogs.length === 0"
++          @click="deleteAllLogs"
++        >
++          <icon-delete /> {{ $t('global.action.deleteAll') }}
++        </b-button>
++        <b-button
++          variant="primary"
++          :class="{ disabled: allLogs.length === 0 }"
++          :download="exportFileNameByDate()"
++          :href="href"
++        >
++          <icon-export /> {{ $t('global.action.exportAll') }}
++        </b-button>
++      </b-col>
++    </b-row>
++    <b-row>
++      <b-col>
++        <table-toolbar
++          ref="toolbar"
++          :selected-items-count="selectedRows.length"
++          :actions="batchActions"
++          @clear-selected="clearSelectedRows($refs.table)"
++          @batch-action="onBatchAction"
++        >
++          <template #toolbar-buttons>
++            <b-button variant="primary" @click="resolveLogs">
++              {{ $t('pageEventLogs.resolve') }}
++            </b-button>
++            <b-button variant="primary" @click="unresolveLogs">
++              {{ $t('pageEventLogs.unresolve') }}
++            </b-button>
++            <table-toolbar-export
++              :data="batchExportData"
++              :file-name="exportFileNameByDate()"
++            />
++          </template>
++        </table-toolbar>
++        <b-table
++          id="table-event-logs"
++          ref="table"
++          responsive="md"
++          selectable
++          no-select-on-click
++          sort-icon-left
++          hover
++          no-sort-reset
++          sort-desc
++          show-empty
++          sort-by="id"
++          :fields="fields"
++          :items="filteredLogs"
++          :sort-compare="onSortCompare"
++          :empty-text="$t('global.table.emptyMessage')"
++          :empty-filtered-text="$t('global.table.emptySearchMessage')"
++          :per-page="perPage"
++          :current-page="currentPage"
++          :filter="searchFilter"
++          @filtered="onFiltered"
++          @row-selected="onRowSelected($event, filteredLogs.length)"
++        >
++          <!-- Checkbox column -->
++          <template #head(checkbox)>
++            <b-form-checkbox
++              v-model="tableHeaderCheckboxModel"
++              data-test-id="eventLogs-checkbox-selectAll"
++              :indeterminate="tableHeaderCheckboxIndeterminate"
++              @change="onChangeHeaderCheckbox($refs.table)"
++            >
++              <span class="sr-only">{{ $t('global.table.selectAll') }}</span>
++            </b-form-checkbox>
++          </template>
++          <template #cell(checkbox)="row">
++            <b-form-checkbox
++              v-model="row.rowSelected"
++              :data-test-id="`eventLogs-checkbox-selectRow-${row.index}`"
++              @change="toggleSelectRow($refs.table, row.index)"
++            >
++              <span class="sr-only">{{ $t('global.table.selectItem') }}</span>
++            </b-form-checkbox>
++          </template>
++
++          <!-- Expand chevron icon -->
++          <template #cell(expandRow)="row">
++            <b-button
++              variant="link"
++              :aria-label="expandRowLabel"
++              :title="expandRowLabel"
++              class="btn-icon-only"
++              @click="toggleRowDetails(row)"
++            >
++              <icon-chevron />
++            </b-button>
++          </template>
++
++          <template #row-details="{ item }">
++            <b-container fluid>
++              <b-row>
++                <b-col>
++                  <dl>
++                    <!-- Name -->
++                    <dt>{{ $t('pageEventLogs.table.name') }}:</dt>
++                    <dd>{{ dataFormatter(item.name) }}</dd>
++                  </dl>
++                  <dl>
++                    <!-- Type -->
++                    <dt>{{ $t('pageEventLogs.table.type') }}:</dt>
++                    <dd>{{ dataFormatter(item.type) }}</dd>
++                  </dl>
++                </b-col>
++                <b-col>
++                  <dl>
++                    <!-- Modified date -->
++                    <dt>{{ $t('pageEventLogs.table.modifiedDate') }}:</dt>
++                    <dd v-if="item.modifiedDate">
++                      {{ item.modifiedDate | formatDate }}
++                      {{ item.modifiedDate | formatTime }}
++                    </dd>
++                    <dd v-else>--</dd>
++                  </dl>
++                </b-col>
++                <b-col class="text-nowrap">
++                  <b-button
++                    class="btn btn-secondary float-right"
++                    :href="item.additionalDataUri"
++                    target="_blank"
++                  >
++                    <icon-download />{{ $t('pageEventLogs.additionalDataUri') }}
++                  </b-button>
++                </b-col>
++              </b-row>
++            </b-container>
++          </template>
++
++          <!-- Severity column -->
++          <template #cell(severity)="{ value }">
++            <status-icon
++              v-if="value"
++              :status="statusIcon(value == 'Info' ? 'OK' : value)"
++            />
++            {{ value }}
++          </template>
++          <!-- Date column -->
++          <template #cell(date)="{ value }">
++            <p class="mb-0">{{ value | formatDate }}</p>
++            <p class="mb-0">{{ value | formatTime }}</p>
++          </template>
++
++          <!-- Status column -->
++          <template #cell(status)="row">
++            <b-form-checkbox
++              v-model="row.item.status"
++              name="switch"
++              switch
++              @change="changelogStatus(row.item)"
++            >
++              <span v-if="row.item.status">
++                {{ $t('pageEventLogs.resolved') }}
++              </span>
++              <span v-else> {{ $t('pageEventLogs.unresolved') }} </span>
++            </b-form-checkbox>
++          </template>
++          <template #cell(filterByStatus)="{ value }">
++            {{ value }}
++          </template>
++
++          <!-- Actions column -->
++          <template #cell(actions)="row">
++            <table-row-action
++              v-for="(action, index) in row.item.actions"
++              :key="index"
++              :value="action.value"
++              :title="action.title"
++              :row-data="row.item"
++              :export-name="exportFileNameByDate('export')"
++              :data-test-id="`eventLogs-button-deleteRow-${row.index}`"
++              @click-table-action="onTableRowAction($event, row.item)"
++            >
++              <template #icon>
++                <icon-export v-if="action.value === 'export'" />
++                <icon-trashcan v-if="action.value === 'delete'" />
++              </template>
++            </table-row-action>
++          </template>
++        </b-table>
++      </b-col>
++    </b-row>
++
++    <!-- Table pagination -->
++    <b-row>
++      <b-col sm="6">
++        <b-form-group
++          class="table-pagination-select"
++          :label="$t('global.table.itemsPerPage')"
++          label-for="pagination-items-per-page"
++        >
++          <b-form-select
++            id="pagination-items-per-page"
++            v-model="perPage"
++            :options="itemsPerPageOptions"
++          />
++        </b-form-group>
++      </b-col>
++      <b-col sm="6">
++        <b-pagination
++          v-model="currentPage"
++          first-number
++          last-number
++          :per-page="perPage"
++          :total-rows="getTotalRowCount(filteredRows)"
++          aria-controls="table-event-logs"
++        />
++      </b-col>
++    </b-row>
++  </b-container>
++</template>
++
++<script>
++import IconDelete from '@carbon/icons-vue/es/trash-can/20';
++import IconTrashcan from '@carbon/icons-vue/es/trash-can/20';
++import IconExport from '@carbon/icons-vue/es/document--export/20';
++import IconChevron from '@carbon/icons-vue/es/chevron--down/20';
++import IconDownload from '@carbon/icons-vue/es/download/20';
++import { omit } from 'lodash';
++
++import PageTitle from '@/components/Global/PageTitle';
++import StatusIcon from '@/components/Global/StatusIcon';
++import Search from '@/components/Global/Search';
++import TableCellCount from '@/components/Global/TableCellCount';
++import TableDateFilter from '@/components/Global/TableDateFilter';
++import TableFilter from '@/components/Global/TableFilter';
++import TableRowAction from '@/components/Global/TableRowAction';
++import TableToolbar from '@/components/Global/TableToolbar';
++import TableToolbarExport from '@/components/Global/TableToolbarExport';
++
++import LoadingBarMixin from '@/components/Mixins/LoadingBarMixin';
++import TableFilterMixin from '@/components/Mixins/TableFilterMixin';
++import BVPaginationMixin, {
++  currentPage,
++  perPage,
++  itemsPerPageOptions,
++} from '@/components/Mixins/BVPaginationMixin';
++import BVTableSelectableMixin, {
++  selectedRows,
++  tableHeaderCheckboxModel,
++  tableHeaderCheckboxIndeterminate,
++} from '@/components/Mixins/BVTableSelectableMixin';
++import BVToastMixin from '@/components/Mixins/BVToastMixin';
++import DataFormatterMixin from '@/components/Mixins/DataFormatterMixin';
++import TableSortMixin from '@/components/Mixins/TableSortMixin';
++import TableRowExpandMixin, {
++  expandRowLabel,
++} from '@/components/Mixins/TableRowExpandMixin';
++import SearchFilterMixin, {
++  searchFilter,
++} from '@/components/Mixins/SearchFilterMixin';
++
++export default {
++  components: {
++    IconDelete,
++    IconExport,
++    IconTrashcan,
++    IconChevron,
++    IconDownload,
++    PageTitle,
++    Search,
++    StatusIcon,
++    TableCellCount,
++    TableFilter,
++    TableRowAction,
++    TableToolbar,
++    TableToolbarExport,
++    TableDateFilter,
++  },
++  mixins: [
++    BVPaginationMixin,
++    BVTableSelectableMixin,
++    BVToastMixin,
++    LoadingBarMixin,
++    TableFilterMixin,
++    DataFormatterMixin,
++    TableSortMixin,
++    TableRowExpandMixin,
++    SearchFilterMixin,
++  ],
++  beforeRouteLeave(to, from, next) {
++    // Hide loader if the user navigates to another page
++    // before request is fulfilled.
++    this.hideLoader();
++    next();
++  },
++  data() {
++    return {
++      fields: [
++        {
++          key: 'expandRow',
++          label: '',
++          tdClass: 'table-row-expand',
++        },
++        {
++          key: 'checkbox',
++          sortable: false,
++        },
++        {
++          key: 'id',
++          label: this.$t('pageEventLogs.table.id'),
++          sortable: true,
++        },
++        {
++          key: 'severity',
++          label: this.$t('pageEventLogs.table.severity'),
++          sortable: true,
++          tdClass: 'text-nowrap',
++        },
++        {
++          key: 'date',
++          label: this.$t('pageEventLogs.table.date'),
++          sortable: true,
++          tdClass: 'text-nowrap',
++        },
++        {
++          key: 'description',
++          label: this.$t('pageEventLogs.table.description'),
++          tdClass: 'text-break',
++        },
++        {
++          key: 'status',
++          label: this.$t('pageEventLogs.table.status'),
++        },
++        {
++          key: 'actions',
++          sortable: false,
++          label: '',
++          tdClass: 'text-right text-nowrap',
++        },
++      ],
++      tableFilters: [
++        {
++          key: 'severity',
++          label: this.$t('pageEventLogs.table.severity'),
++          values: ['Info', 'Warning', 'Critical'],
++        },
++        {
++          key: 'filterByStatus',
++          label: this.$t('pageEventLogs.table.status'),
++          values: ['Resolved', 'Unresolved'],
++        },
++      ],
++      expandRowLabel,
++      activeFilters: [],
++      batchActions: [
++        {
++          value: 'delete',
++          label: this.$t('global.action.delete'),
++        },
++      ],
++      currentPage: currentPage,
++      filterStartDate: null,
++      filterEndDate: null,
++      itemsPerPageOptions: itemsPerPageOptions,
++      perPage: perPage,
++      searchFilter: searchFilter,
++      searchTotalFilteredRows: 0,
++      selectedRows: selectedRows,
++      tableHeaderCheckboxModel: tableHeaderCheckboxModel,
++      tableHeaderCheckboxIndeterminate: tableHeaderCheckboxIndeterminate,
++    };
++  },
++  computed: {
++    href() {
++      return `data:text/json;charset=utf-8,${this.exportAllLogs()}`;
++    },
++    filteredRows() {
++      return this.searchFilter
++        ? this.searchTotalFilteredRows
++        : this.filteredLogs.length;
++    },
++    allLogs() {
++      return this.$store.getters['eventLog/allEvents'].map((event) => {
++        return {
++          ...event,
++          actions: [
++            {
++              value: 'export',
++              title: this.$t('global.action.export'),
++            },
++            {
++              value: 'delete',
++              title: this.$t('global.action.delete'),
++            },
++          ],
++        };
++      });
++    },
++    batchExportData() {
++      return this.selectedRows.map((row) => omit(row, 'actions'));
++    },
++    filteredLogsByDate() {
++      return this.getFilteredTableDataByDate(
++        this.allLogs,
++        this.filterStartDate,
++        this.filterEndDate
++      );
++    },
++    filteredLogs1() {
++      return this.getFilteredTableData(
++        this.filteredLogsByDate,
++        this.activeFilters
++      );
++    },
++    filteredLogs() {
++      const my_filters = [
++        { key: 'description', values: 'nslcd' },
++        { key: 'description', values: 'dropbear' },
++      ];
++      return this.getFilteredTableData1(this.filteredLogs1, my_filters);
++    },
++  },
++  created() {
++    this.startLoader();
++    this.$store
++      .dispatch('eventLog/getEventLogData')
++      .finally(() => this.endLoader());
++  },
++  methods: {
++    changelogStatus(row) {
++      this.$store
++        .dispatch('eventLog/updateEventLogStatus', {
++          uri: row.uri,
++          status: row.status,
++        })
++        .then((success) => {
++          this.successToast(success);
++        })
++        .catch(({ message }) => this.errorToast(message));
++    },
++    deleteAllLogs() {
++      this.$bvModal
++        .msgBoxConfirm(this.$t('pageEventLogs.modal.deleteAllMessage'), {
++          title: this.$t('pageEventLogs.modal.deleteAllTitle'),
++          okTitle: this.$t('global.action.delete'),
++          okVariant: 'danger',
++          cancelTitle: this.$t('global.action.cancel'),
++        })
++        .then((deleteConfirmed) => {
++          if (deleteConfirmed) {
++            this.$store
++              .dispatch('eventLog/deleteAllEventLogs', this.allLogs)
++              .then((message) => this.successToast(message))
++              .catch(({ message }) => this.errorToast(message));
++          }
++        });
++    },
++    deleteLogs(uris) {
++      this.$store
++        .dispatch('eventLog/deleteEventLogs', uris)
++        .then((messages) => {
++          messages.forEach(({ type, message }) => {
++            if (type === 'success') {
++              this.successToast(message);
++            } else if (type === 'error') {
++              this.errorToast(message);
++            }
++          });
++        });
++    },
++    exportAllLogs() {
++      {
++        return this.$store.getters['eventLog/allEvents'].map((eventLogs) => {
++          const allEventLogsString = JSON.stringify(eventLogs);
++          return allEventLogsString;
++        });
++      }
++    },
++    onFilterChange({ activeFilters }) {
++      this.activeFilters = activeFilters;
++    },
++    onSortCompare(a, b, key) {
++      if (key === 'severity') {
++        return this.sortStatus(a, b, key);
++      }
++    },
++    onTableRowAction(action, { uri }) {
++      if (action === 'delete') {
++        this.$bvModal
++          .msgBoxConfirm(this.$tc('pageEventLogs.modal.deleteMessage'), {
++            title: this.$tc('pageEventLogs.modal.deleteTitle'),
++            okTitle: this.$t('global.action.delete'),
++            cancelTitle: this.$t('global.action.cancel'),
++          })
++          .then((deleteConfirmed) => {
++            if (deleteConfirmed) this.deleteLogs([uri]);
++          });
++      }
++    },
++    onBatchAction(action) {
++      if (action === 'delete') {
++        const uris = this.selectedRows.map((row) => row.uri);
++        this.$bvModal
++          .msgBoxConfirm(
++            this.$tc(
++              'pageEventLogs.modal.deleteMessage',
++              this.selectedRows.length
++            ),
++            {
++              title: this.$tc(
++                'pageEventLogs.modal.deleteTitle',
++                this.selectedRows.length
++              ),
++              okTitle: this.$t('global.action.delete'),
++              cancelTitle: this.$t('global.action.cancel'),
++            }
++          )
++          .then((deleteConfirmed) => {
++            if (deleteConfirmed) {
++              if (this.selectedRows.length === this.allLogs.length) {
++                this.$store
++                  .dispatch(
++                    'eventLog/deleteAllEventLogs',
++                    this.selectedRows.length
++                  )
++                  .then((message) => this.successToast(message))
++                  .catch(({ message }) => this.errorToast(message));
++              } else {
++                this.deleteLogs(uris);
++              }
++            }
++          });
++      }
++    },
++    onChangeDateTimeFilter({ fromDate, toDate }) {
++      this.filterStartDate = fromDate;
++      this.filterEndDate = toDate;
++    },
++    onFiltered(filteredItems) {
++      this.searchTotalFilteredRows = filteredItems.length;
++    },
++    // Create export file name based on date
++    exportFileNameByDate(value) {
++      let date = new Date();
++      date =
++        date.toISOString().slice(0, 10) +
++        '_' +
++        date.toString().split(':').join('-').split(' ')[4];
++      let fileName;
++      if (value === 'export') {
++        fileName = 'event_log_';
++      } else {
++        fileName = 'all_event_logs_';
++      }
++      return fileName + date;
++    },
++    resolveLogs() {
++      this.$store
++        .dispatch('eventLog/resolveEventLogs', this.selectedRows)
++        .then((messages) => {
++          messages.forEach(({ type, message }) => {
++            if (type === 'success') {
++              this.successToast(message);
++            } else if (type === 'error') {
++              this.errorToast(message);
++            }
++          });
++        });
++    },
++    unresolveLogs() {
++      this.$store
++        .dispatch('eventLog/unresolveEventLogs', this.selectedRows)
++        .then((messages) => {
++          messages.forEach(({ type, message }) => {
++            if (type === 'success') {
++              this.successToast(message);
++            } else if (type === 'error') {
++              this.errorToast(message);
++            }
++          });
++        });
++    },
++  },
++};
++</script>
+diff -r -u --new-file a/src/views/Logs/EventLogs2/index.js b/src/views/Logs/EventLogs2/index.js
+--- a/src/views/Logs/EventLogs2/index.js	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Logs/EventLogs2/index.js	2022-09-06 20:31:24.073945819 +0300
+@@ -0,0 +1,2 @@
++import EventLogs2 from './EventLogs2.vue';
++export default EventLogs2;
+diff -r -u --new-file a/src/views/Settings/RemoteLogs/index.js b/src/views/Settings/RemoteLogs/index.js
+--- a/src/views/Settings/RemoteLogs/index.js	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Settings/RemoteLogs/index.js	2022-09-06 20:31:24.069945853 +0300
+@@ -0,0 +1,2 @@
++import RemoteLogs from './RemoteLogs.vue';
++export default RemoteLogs;
+diff -r -u --new-file a/src/views/Settings/RemoteLogs/ModalUpdateRemoteEmailLog.vue b/src/views/Settings/RemoteLogs/ModalUpdateRemoteEmailLog.vue
+--- a/src/views/Settings/RemoteLogs/ModalUpdateRemoteEmailLog.vue	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Settings/RemoteLogs/ModalUpdateRemoteEmailLog.vue	2022-09-06 20:31:24.069945853 +0300
+@@ -0,0 +1,346 @@
++<template>
++  <b-modal
++    id="update-remote-email-log"
++    ref="modal"
++    @ok="onOk"
++    @hidden="resetForm"
++    @shown="fillForm"
++  >
++    <template #modal-title>
++      <template v-if="remoteEmailLog">
++        {{ $t('pageRemoteLogs.editRemoteEmailLog') }}
++      </template>
++      <template v-else>
++        {{ $t('pageRemoteLogs.addNewRemoteEmailLog') }}
++      </template>
++    </template>
++    <b-form>
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.severity')"
++        label-for="severity"
++      >
++        <b-form-select
++          id="severity"
++          v-model="form.severity"
++          :options="severityOptions"
++          :state="getValidationState($v.form.severity)"
++          @input="$v.form.severity.$touch()"
++        >
++        </b-form-select>
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.severity.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.substr')"
++        label-for="substr"
++      >
++        <b-form-input
++          id="substr"
++          v-model="form.substr"
++          type="text"
++          :state="getValidationState($v.form.substr)"
++          @input="$v.form.substr.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.substr.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.server')"
++        label-for="server"
++      >
++        <b-form-input
++          id="server"
++          v-model="form.server"
++          type="text"
++          :state="getValidationState($v.form.server)"
++          @input="$v.form.server.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.server.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.serverPort')"
++        label-for="serverPort"
++      >
++        <b-form-input
++          id="serverPort"
++          v-model="form.serverPort"
++          type="number"
++          :state="getValidationState($v.form.serverPort)"
++          @input="$v.form.serverPort.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.serverPort.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.connType')"
++        label-for="connType"
++      >
++        <b-form-select
++          id="connType"
++          v-model="form.connType"
++          :options="connTypeOptions"
++          :state="getValidationState($v.form.connType)"
++          @input="$v.form.connType.$touch()"
++        >
++        </b-form-select>
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.connType.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.userName')"
++        label-for="userName"
++      >
++        <b-form-input
++          id="userName"
++          v-model="form.userName"
++          type="text"
++          :state="getValidationState($v.form.userName)"
++          @input="$v.form.userName.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.userName.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.userPass')"
++        label-for="userPass"
++      >
++        <b-form-input
++          id="userPass"
++          v-model="form.userPass"
++          type="text"
++          :state="getValidationState($v.form.userPass)"
++          @input="$v.form.userPass.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.userPass.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.srcEmail')"
++        label-for="srcEmail"
++      >
++        <b-form-input
++          id="srcEmail"
++          v-model="form.srcEmail"
++          type="text"
++          :state="getValidationState($v.form.srcEmail)"
++          @input="$v.form.srcEmail.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.srcEmail.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.destEmail')"
++        label-for="destEmail"
++      >
++        <b-form-input
++          id="destEmail"
++          v-model="form.destEmail"
++          type="text"
++          :state="getValidationState($v.form.destEmail)"
++          @input="$v.form.destEmail.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.destEmail.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++    </b-form>
++    <template #modal-ok>
++      <template v-if="remoteEmailLog">
++        {{ $t('global.action.refresh') }}
++      </template>
++      <template v-else>
++        {{ $t('global.action.add') }}
++      </template>
++    </template>
++    <template #modal-cancel>
++      {{ $t('global.action.cancel') }}
++    </template>
++  </b-modal>
++</template>
++
++<script>
++//import { required, ipAddress, requiredIf } from 'vuelidate/lib/validators';
++import { required } from 'vuelidate/lib/validators';
++import VuelidateMixin from '@/components/Mixins/VuelidateMixin.js';
++
++export default {
++  mixins: [VuelidateMixin],
++  props: {
++    remoteEmailLog: {
++      type: Object,
++      default: null,
++      validator: (prop) => {
++        if (prop === null) return true;
++        return (
++          Object.prototype.hasOwnProperty.call(prop, 'severity') &&
++          Object.prototype.hasOwnProperty.call(prop, 'substr') &&
++          Object.prototype.hasOwnProperty.call(prop, 'server') &&
++          Object.prototype.hasOwnProperty.call(prop, 'serverPort') &&
++          Object.prototype.hasOwnProperty.call(prop, 'connType') &&
++          Object.prototype.hasOwnProperty.call(prop, 'userName') &&
++          Object.prototype.hasOwnProperty.call(prop, 'userPass') &&
++          Object.prototype.hasOwnProperty.call(prop, 'srcEmail') &&
++          Object.prototype.hasOwnProperty.call(prop, 'destEmail')
++        );
++      },
++    },
++  },
++  data() {
++    return {
++      form: {
++        severity: null,
++        substr: null,
++        server: null,
++        serverPort: null,
++        connType: null,
++        userName: null,
++        userPass: null,
++        srcEmail: null,
++        destEmail: null,
++      },
++    };
++  },
++  computed: {
++    severityOptions() {
++      return [
++        { text: 'Info', value: 'Info' },
++        { text: 'Warning', value: 'Warning' },
++        { text: 'Critical', value: 'Critical' },
++      ];
++    },
++    connTypeOptions() {
++      return [{ text: 'SMTP', value: 'SMTP' }];
++    },
++  },
++  validations() {
++    return {
++      form: {
++        severity: {
++          required,
++        },
++        substr: {
++          required,
++        },
++        server: {
++          required,
++        },
++        serverPort: {
++          required,
++        },
++        connType: {
++          required,
++        },
++        userName: {
++          required,
++        },
++        userPass: {
++          required,
++        },
++        srcEmail: {
++          required,
++        },
++        destEmail: {
++          required,
++        },
++      },
++    };
++  },
++  methods: {
++    handleSubmit() {
++      this.$v.$touch();
++      if (this.$v.$invalid) return;
++      const serverPort = Number(this.form.serverPort);
++      if (
++        this.form.serverPort.length > 5 ||
++        serverPort < 1 ||
++        serverPort >= 65536
++      )
++        return;
++      this.$emit('ok', {
++        severity: this.form.severity,
++        substr: this.form.substr,
++        server: this.form.server,
++        serverPort: serverPort,
++        connType: this.form.connType,
++        userName: this.form.userName,
++        userPass: this.form.userPass,
++        srcEmail: this.form.srcEmail,
++        destEmail: this.form.destEmail,
++        location: this.remoteEmailLog ? this.remoteEmailLog.location : null,
++      });
++      this.closeModal();
++    },
++    closeModal() {
++      this.$nextTick(() => {
++        this.$refs.modal.hide();
++      });
++    },
++    resetForm() {
++      this.$v.$reset();
++    },
++    fillForm() {
++      if (this.remoteEmailLog) {
++        this.form.severity = this.remoteEmailLog.severity;
++        this.form.substr = this.remoteEmailLog.substr;
++        this.form.server = this.remoteEmailLog.server;
++        this.form.serverPort = this.remoteEmailLog.serverPort.toString();
++        this.form.connType = this.remoteEmailLog.connType;
++        this.form.userName = this.remoteEmailLog.userName;
++        this.form.userPass = this.remoteEmailLog.userPass;
++        this.form.srcEmail = this.remoteEmailLog.srcEmail;
++        this.form.destEmail = this.remoteEmailLog.destEmail;
++      } else {
++        this.form.severity = this.severityOptions[0].value;
++        this.form.substr = '*';
++        this.form.server = '';
++        this.form.serverPort = '587';
++        this.form.connType = this.connTypeOptions[0].value;
++        this.form.userName = '';
++        this.form.userPass = '';
++        this.form.srcEmail = '';
++        this.form.destEmail = '';
++      }
++    },
++    onOk(bvModalEvt) {
++      // prevent modal close
++      bvModalEvt.preventDefault();
++      this.handleSubmit();
++    },
++  },
++};
++</script>
+diff -r -u --new-file a/src/views/Settings/RemoteLogs/ModalUpdateRemoteLog.vue b/src/views/Settings/RemoteLogs/ModalUpdateRemoteLog.vue
+--- a/src/views/Settings/RemoteLogs/ModalUpdateRemoteLog.vue	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Settings/RemoteLogs/ModalUpdateRemoteLog.vue	2022-09-06 20:31:24.069945853 +0300
+@@ -0,0 +1,245 @@
++<template>
++  <b-modal
++    id="update-remote-log"
++    ref="modal"
++    @ok="onOk"
++    @hidden="resetForm"
++    @shown="fillForm"
++  >
++    <template #modal-title>
++      <template v-if="remoteLog">
++        {{ $t('pageRemoteLogs.editRemoteLog') }}
++      </template>
++      <template v-else>
++        {{ $t('pageRemoteLogs.addNewRemoteLog') }}
++      </template>
++    </template>
++    <b-form>
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.severity')"
++        label-for="severity"
++      >
++        <b-form-select
++          id="severity"
++          v-model="form.severity"
++          :options="severityOptions"
++          :state="getValidationState($v.form.severity)"
++          @input="$v.form.severity.$touch()"
++        >
++        </b-form-select>
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.severity.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.substr')"
++        label-for="substr"
++      >
++        <b-form-input
++          id="substr"
++          v-model="form.substr"
++          type="text"
++          :state="getValidationState($v.form.substr)"
++          @input="$v.form.substr.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.substr.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.server')"
++        label-for="server"
++      >
++        <b-form-input
++          id="server"
++          v-model="form.server"
++          type="text"
++          :state="getValidationState($v.form.server)"
++          @input="$v.form.server.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.server.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.serverPort')"
++        label-for="serverPort"
++      >
++        <b-form-input
++          id="serverPort"
++          v-model="form.serverPort"
++          type="number"
++          :state="getValidationState($v.form.serverPort)"
++          @input="$v.form.serverPort.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.serverPort.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.connType')"
++        label-for="connType"
++      >
++        <b-form-select
++          id="connType"
++          v-model="form.connType"
++          :options="connTypeOptions"
++          :state="getValidationState($v.form.connType)"
++          @input="$v.form.connType.$touch()"
++        >
++        </b-form-select>
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.connType.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++    </b-form>
++    <template #modal-ok>
++      <template v-if="remoteLog">
++        {{ $t('global.action.refresh') }}
++      </template>
++      <template v-else>
++        {{ $t('global.action.add') }}
++      </template>
++    </template>
++    <template #modal-cancel>
++      {{ $t('global.action.cancel') }}
++    </template>
++  </b-modal>
++</template>
++
++<script>
++//import { required, ipAddress, requiredIf } from 'vuelidate/lib/validators';
++import { required } from 'vuelidate/lib/validators';
++import VuelidateMixin from '@/components/Mixins/VuelidateMixin.js';
++
++export default {
++  mixins: [VuelidateMixin],
++  props: {
++    remoteLog: {
++      type: Object,
++      default: null,
++      validator: (prop) => {
++        if (prop === null) return true;
++        return (
++          Object.prototype.hasOwnProperty.call(prop, 'severity') &&
++          Object.prototype.hasOwnProperty.call(prop, 'substr') &&
++          Object.prototype.hasOwnProperty.call(prop, 'server') &&
++          Object.prototype.hasOwnProperty.call(prop, 'serverPort') &&
++          Object.prototype.hasOwnProperty.call(prop, 'connType')
++        );
++      },
++    },
++  },
++  data() {
++    return {
++      form: {
++        severity: null,
++        substr: null,
++        server: null,
++        serverPort: null,
++        connType: null,
++      },
++    };
++  },
++  computed: {
++    severityOptions() {
++      return [
++        { text: 'Info', value: 'Info' },
++        { text: 'Warning', value: 'Warning' },
++        { text: 'Critical', value: 'Critical' },
++      ];
++    },
++    connTypeOptions() {
++      return [
++        { text: 'UDP', value: 'UDP' },
++        { text: 'TCP', value: 'TCP' },
++      ];
++    },
++  },
++  validations() {
++    return {
++      form: {
++        severity: {
++          required,
++        },
++        substr: {
++          required,
++        },
++        server: {
++          required,
++        },
++        serverPort: {
++          required,
++        },
++        connType: {
++          required,
++        },
++      },
++    };
++  },
++  methods: {
++    handleSubmit() {
++      this.$v.$touch();
++      if (this.$v.$invalid) return;
++      const serverPort = Number(this.form.serverPort);
++      if (
++        this.form.serverPort.length > 5 ||
++        serverPort < 1 ||
++        serverPort >= 65536
++      )
++        return;
++      this.$emit('ok', {
++        severity: this.form.severity,
++        substr: this.form.substr,
++        server: this.form.server,
++        serverPort: serverPort,
++        connType: this.form.connType,
++        location: this.remoteLog ? this.remoteLog.location : null,
++      });
++      this.closeModal();
++    },
++    closeModal() {
++      this.$nextTick(() => {
++        this.$refs.modal.hide();
++      });
++    },
++    resetForm() {
++      this.$v.$reset();
++    },
++    fillForm() {
++      if (this.remoteLog) {
++        this.form.severity = this.remoteLog.severity;
++        this.form.substr = this.remoteLog.substr;
++        this.form.server = this.remoteLog.server;
++        this.form.serverPort = this.remoteLog.serverPort.toString();
++        this.form.connType = this.remoteLog.connType;
++      } else {
++        this.form.severity = this.severityOptions[0].value;
++        this.form.substr = '*';
++        this.form.server = '';
++        this.form.serverPort = '514';
++        this.form.connType = this.connTypeOptions[0].value;
++      }
++    },
++    onOk(bvModalEvt) {
++      // prevent modal close
++      bvModalEvt.preventDefault();
++      this.handleSubmit();
++    },
++  },
++};
++</script>
+diff -r -u --new-file a/src/views/Settings/RemoteLogs/ModalUpdateRemoteSNMPLog.vue b/src/views/Settings/RemoteLogs/ModalUpdateRemoteSNMPLog.vue
+--- a/src/views/Settings/RemoteLogs/ModalUpdateRemoteSNMPLog.vue	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Settings/RemoteLogs/ModalUpdateRemoteSNMPLog.vue	2022-09-06 20:31:24.069945853 +0300
+@@ -0,0 +1,212 @@
++<template>
++  <b-modal
++    id="update-remote-snmp-log"
++    ref="modal"
++    @ok="onOk"
++    @hidden="resetForm"
++    @shown="fillForm"
++  >
++    <template #modal-title>
++      <template v-if="remoteSnmpLog">
++        {{ $t('pageRemoteLogs.editRemoteSNMPLog') }}
++      </template>
++      <template v-else>
++        {{ $t('pageRemoteLogs.addNewRemoteSNMPLog') }}
++      </template>
++    </template>
++    <b-form>
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.severity')"
++        label-for="severity"
++      >
++        <b-form-select
++          id="severity"
++          v-model="form.severity"
++          :options="severityOptions"
++          :state="getValidationState($v.form.severity)"
++          @input="$v.form.severity.$touch()"
++        >
++        </b-form-select>
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.severity.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.substr')"
++        label-for="substr"
++      >
++        <b-form-input
++          id="substr"
++          v-model="form.substr"
++          type="text"
++          :state="getValidationState($v.form.substr)"
++          @input="$v.form.substr.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.substr.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.server')"
++        label-for="server"
++      >
++        <b-form-input
++          id="server"
++          v-model="form.server"
++          type="text"
++          :state="getValidationState($v.form.server)"
++          @input="$v.form.server.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.server.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageRemoteLogs.modal.serverPort')"
++        label-for="serverPort"
++      >
++        <b-form-input
++          id="serverPort"
++          v-model="form.serverPort"
++          type="number"
++          :state="getValidationState($v.form.serverPort)"
++          @input="$v.form.serverPort.$touch()"
++        />
++        <b-form-invalid-feedback role="alert">
++          <template v-if="!$v.form.serverPort.required">
++            {{ $t('global.form.fieldRequired') }}
++          </template>
++        </b-form-invalid-feedback>
++      </b-form-group>
++    </b-form>
++    <template #modal-ok>
++      <template v-if="remoteSnmpLog">
++        {{ $t('global.action.refresh') }}
++      </template>
++      <template v-else>
++        {{ $t('global.action.add') }}
++      </template>
++    </template>
++    <template #modal-cancel>
++      {{ $t('global.action.cancel') }}
++    </template>
++  </b-modal>
++</template>
++
++<script>
++//import { required, ipAddress, requiredIf } from 'vuelidate/lib/validators';
++import { required } from 'vuelidate/lib/validators';
++import VuelidateMixin from '@/components/Mixins/VuelidateMixin.js';
++
++export default {
++  mixins: [VuelidateMixin],
++  props: {
++    remoteSnmpLog: {
++      type: Object,
++      default: null,
++      validator: (prop) => {
++        if (prop === null) return true;
++        return (
++          Object.prototype.hasOwnProperty.call(prop, 'severity') &&
++          Object.prototype.hasOwnProperty.call(prop, 'substr') &&
++          Object.prototype.hasOwnProperty.call(prop, 'server') &&
++          Object.prototype.hasOwnProperty.call(prop, 'serverPort')
++        );
++      },
++    },
++  },
++  data() {
++    return {
++      form: {
++        severity: null,
++        substr: null,
++        server: null,
++        serverPort: null,
++      },
++    };
++  },
++  computed: {
++    severityOptions() {
++      return [
++        { text: 'Info', value: 'Info' },
++        { text: 'Warning', value: 'Warning' },
++        { text: 'Critical', value: 'Critical' },
++      ];
++    },
++  },
++  validations() {
++    return {
++      form: {
++        severity: {
++          required,
++        },
++        substr: {
++          required,
++        },
++        server: {
++          required,
++        },
++        serverPort: {
++          required,
++        },
++      },
++    };
++  },
++  methods: {
++    handleSubmit() {
++      this.$v.$touch();
++      if (this.$v.$invalid) return;
++      const serverPort = Number(this.form.serverPort);
++      if (
++        this.form.serverPort.length > 5 ||
++        serverPort < 1 ||
++        serverPort >= 65536
++      )
++        return;
++      this.$emit('ok', {
++        severity: this.form.severity,
++        substr: this.form.substr,
++        server: this.form.server,
++        serverPort: serverPort,
++        location: this.remoteSnmpLog ? this.remoteSnmpLog.location : null,
++      });
++      this.closeModal();
++    },
++    closeModal() {
++      this.$nextTick(() => {
++        this.$refs.modal.hide();
++      });
++    },
++    resetForm() {
++      this.$v.$reset();
++    },
++    fillForm() {
++      if (this.remoteSnmpLog) {
++        this.form.severity = this.remoteSnmpLog.severity;
++        this.form.substr = this.remoteSnmpLog.substr;
++        this.form.server = this.remoteSnmpLog.server;
++        this.form.serverPort = this.remoteSnmpLog.serverPort.toString();
++      } else {
++        this.form.severity = this.severityOptions[0].value;
++        this.form.substr = '*';
++        this.form.server = '';
++        this.form.serverPort = '162';
++      }
++    },
++    onOk(bvModalEvt) {
++      // prevent modal close
++      bvModalEvt.preventDefault();
++      this.handleSubmit();
++    },
++  },
++};
++</script>
+diff -r -u --new-file a/src/views/Settings/RemoteLogs/RemoteLogs.vue b/src/views/Settings/RemoteLogs/RemoteLogs.vue
+--- a/src/views/Settings/RemoteLogs/RemoteLogs.vue	1970-01-01 03:00:00.000000000 +0300
++++ b/src/views/Settings/RemoteLogs/RemoteLogs.vue	2022-09-06 20:31:24.069945853 +0300
+@@ -0,0 +1,689 @@
++<template>
++  <b-container fluid="xl">
++    <page-title />
++    <b-row>
++      <b-col xl="11" class="text-right">
++        <b-button variant="primary" @click="initModalUpdateRemoteLog(null)">
++          <icon-add />
++          {{ $t('pageRemoteLogs.addNewRemoteLog') }}
++        </b-button>
++      </b-col>
++    </b-row>
++    <b-row>
++      <b-col xl="11">
++        <b-table
++          responsive="md"
++          show-empty
++          hover
++          :fields="fields"
++          :items="tableItems"
++          :empty-text="$t('global.table.emptyMessage')"
++        >
++          <template #cell(validFrom)="{ value }">
++            {{ value | formatDate }}
++          </template>
++
++          <template #cell(actions)="{ value, item }">
++            <table-row-action
++              v-for="(action, index) in value"
++              :key="index"
++              :value="action.value"
++              :title="action.title"
++              :enabled="action.enabled"
++              @click-table-action="onTableRowAction($event, item)"
++            >
++              <template #icon>
++                <icon-edit v-if="action.value === 'edit'" />
++                <icon-trashcan v-if="action.value === 'delete'" />
++              </template>
++            </table-row-action>
++          </template>
++        </b-table>
++      </b-col>
++    </b-row>
++    <!-- Remote Email Log -->
++    <b-row>
++      <b-col xl="11" class="text-right">
++        <b-button
++          variant="primary"
++          @click="initModalUpdateRemoteEmailLog(null)"
++        >
++          <icon-add />
++          {{ $t('pageRemoteLogs.addNewRemoteEmailLog') }}
++        </b-button>
++      </b-col>
++    </b-row>
++    <b-row>
++      <b-col xl="11">
++        <b-table
++          responsive="md"
++          show-empty
++          hover
++          :fields="emailFields"
++          :items="tableEmailItems"
++          :empty-text="$t('global.table.emptyMessage')"
++        >
++          <template #cell(validFrom)="{ value }">
++            {{ value | formatDate }}
++          </template>
++
++          <template #cell(actions)="{ value, item }">
++            <table-row-action
++              v-for="(action, index) in value"
++              :key="index"
++              :value="action.value"
++              :title="action.title"
++              :enabled="action.enabled"
++              @click-table-action="onEmailTableRowAction($event, item)"
++            >
++              <template #icon>
++                <icon-edit v-if="action.value === 'edit'" />
++                <icon-trashcan v-if="action.value === 'delete'" />
++              </template>
++            </table-row-action>
++          </template>
++        </b-table>
++      </b-col>
++    </b-row>
++    <!-- Remote SNMP Log -->
++    <b-row>
++      <b-col xl="11" class="text-right">
++        <b-button variant="primary" @click="initModalUpdateRemoteSNMPLog(null)">
++          <icon-add />
++          {{ $t('pageRemoteLogs.addNewRemoteSNMPLog') }}
++        </b-button>
++      </b-col>
++    </b-row>
++    <b-row>
++      <b-col xl="11">
++        <b-table
++          responsive="md"
++          show-empty
++          hover
++          :fields="snmpFields"
++          :items="tableSNMPItems"
++          :empty-text="$t('global.table.emptyMessage')"
++        >
++          <template #cell(validFrom)="{ value }">
++            {{ value | formatDate }}
++          </template>
++
++          <template #cell(actions)="{ value, item }">
++            <table-row-action
++              v-for="(action, index) in value"
++              :key="index"
++              :value="action.value"
++              :title="action.title"
++              :enabled="action.enabled"
++              @click-table-action="onSNMPTableRowAction($event, item)"
++            >
++              <template #icon>
++                <icon-edit v-if="action.value === 'edit'" />
++                <icon-trashcan v-if="action.value === 'delete'" />
++              </template>
++            </table-row-action>
++          </template>
++        </b-table>
++      </b-col>
++    </b-row>
++    <modal-update-remote-log :remote-log="modalRemoteLog" @ok="onModalOk" />
++    <modal-update-remote-email-log
++      :remote-email-log="modalRemoteEmailLog"
++      @ok="onEmailModalOk"
++    />
++    <modal-update-remote-snmp-log
++      :remote-snmp-log="modalRemoteSNMPLog"
++      @ok="onSNMPModalOk"
++    />
++  </b-container>
++</template>
++
++<script>
++import IconAdd from '@carbon/icons-vue/es/add--alt/20';
++import IconEdit from '@carbon/icons-vue/es/edit/20';
++import IconTrashcan from '@carbon/icons-vue/es/trash-can/20';
++
++import ModalUpdateRemoteLog from './ModalUpdateRemoteLog';
++import ModalUpdateRemoteEmailLog from './ModalUpdateRemoteEmailLog';
++import ModalUpdateRemoteSnmpLog from './ModalUpdateRemoteSNMPLog';
++import PageTitle from '@/components/Global/PageTitle';
++import TableRowAction from '@/components/Global/TableRowAction';
++//import StatusIcon from '@/components/Global/StatusIcon';
++//import Alert from '@/components/Global/Alert';
++
++import BVToastMixin from '@/components/Mixins/BVToastMixin';
++import LoadingBarMixin from '@/components/Mixins/LoadingBarMixin';
++
++export default {
++  name: 'RemoteLogs',
++  components: {
++    //Alert,
++    IconAdd,
++    IconEdit,
++    IconTrashcan,
++    ModalUpdateRemoteLog,
++    ModalUpdateRemoteEmailLog,
++    ModalUpdateRemoteSnmpLog,
++    PageTitle,
++    //StatusIcon,
++    TableRowAction,
++  },
++  mixins: [BVToastMixin, LoadingBarMixin],
++  beforeRouteLeave(to, from, next) {
++    this.hideLoader();
++    next();
++  },
++  data() {
++    return {
++      modalRemoteLog: null,
++      fields: [
++        //{
++        //  key: 'id',
++        //  label: this.$t('pageRemoteLogs.table.id'),
++        //},
++        {
++          key: 'severity',
++          label: this.$t('pageRemoteLogs.table.severity'),
++        },
++        {
++          key: 'substr',
++          label: this.$t('pageRemoteLogs.table.substr'),
++        },
++        {
++          key: 'server',
++          label: this.$t('pageRemoteLogs.table.server'),
++        },
++        {
++          key: 'serverPort',
++          label: this.$t('pageRemoteLogs.table.serverPort'),
++        },
++        {
++          key: 'connType',
++          label: this.$t('pageRemoteLogs.table.connType'),
++        },
++        {
++          key: 'actions',
++          label: '',
++          tdClass: 'text-right text-nowrap',
++        },
++      ],
++      modalRemoteEmailLog: null,
++      emailFields: [
++        //{
++        //  key: 'id',
++        //  label: this.$t('pageRemoteLogs.table.id'),
++        //},
++        {
++          key: 'severity',
++          label: this.$t('pageRemoteLogs.table.severity'),
++        },
++        {
++          key: 'substr',
++          label: this.$t('pageRemoteLogs.table.substr'),
++        },
++        {
++          key: 'server',
++          label: this.$t('pageRemoteLogs.table.server'),
++        },
++        {
++          key: 'serverPort',
++          label: this.$t('pageRemoteLogs.table.serverPort'),
++        },
++        {
++          key: 'connType',
++          label: this.$t('pageRemoteLogs.table.connType'),
++        },
++        {
++          key: 'userName',
++          label: this.$t('pageRemoteLogs.table.userName'),
++        },
++        {
++          key: 'userPass',
++          label: this.$t('pageRemoteLogs.table.userPass'),
++        },
++        {
++          key: 'srcEmail',
++          label: this.$t('pageRemoteLogs.table.srcEmail'),
++        },
++        {
++          key: 'destEmail',
++          label: this.$t('pageRemoteLogs.table.destEmail'),
++        },
++        {
++          key: 'actions',
++          label: '',
++          tdClass: 'text-right text-nowrap',
++        },
++      ],
++      modalRemoteSNMPLog: null,
++      snmpFields: [
++        //{
++        //  key: 'id',
++        //  label: this.$t('pageRemoteLogs.table.id'),
++        //},
++        {
++          key: 'severity',
++          label: this.$t('pageRemoteLogs.table.severity'),
++        },
++        {
++          key: 'substr',
++          label: this.$t('pageRemoteLogs.table.substr'),
++        },
++        {
++          key: 'server',
++          label: this.$t('pageRemoteLogs.table.server'),
++        },
++        {
++          key: 'serverPort',
++          label: this.$t('pageRemoteLogs.table.serverPort'),
++        },
++        {
++          key: 'actions',
++          label: '',
++          tdClass: 'text-right text-nowrap',
++        },
++      ],
++    };
++  },
++  computed: {
++    remoteLogs() {
++      return this.$store.getters['remoteLogs/allRemoteLogs'];
++    },
++    tableItems() {
++      return this.remoteLogs.map((remoteLog) => {
++        return {
++          ...remoteLog,
++          actions: [
++            {
++              value: 'edit',
++              title: this.$t('pageRemoteLogs.editRemoteLog'),
++            },
++            {
++              value: 'delete',
++              title: this.$t('pageRemoteLogs.deleteRemoteLog'),
++            },
++          ],
++        };
++      });
++    },
++    remoteEmailLogs() {
++      return this.$store.getters['remoteEmailLogs/allRemoteEmailLogs'];
++    },
++    tableEmailItems() {
++      return this.remoteEmailLogs.map((remoteEmailLog) => {
++        return {
++          ...remoteEmailLog,
++          actions: [
++            {
++              value: 'edit',
++              title: this.$t('pageRemoteLogs.editRemoteEmailLog'),
++            },
++            {
++              value: 'delete',
++              title: this.$t('pageRemoteLogs.deleteRemoteEmailLog'),
++            },
++          ],
++        };
++      });
++    },
++    remoteSNMPLogs() {
++      return this.$store.getters['remoteSNMPLogs/allRemoteSNMPLogs'];
++    },
++    tableSNMPItems() {
++      return this.remoteSNMPLogs.map((remoteSNMPLog) => {
++        return {
++          ...remoteSNMPLog,
++          actions: [
++            {
++              value: 'edit',
++              title: this.$t('pageRemoteLogs.editRemoteSNMPLog'),
++            },
++            {
++              value: 'delete',
++              title: this.$t('pageRemoteLogs.deleteRemoteSNMPLog'),
++            },
++          ],
++        };
++      });
++    },
++  },
++  async created() {
++    this.startLoader();
++    this.$store
++      .dispatch('remoteLogs/getRemoteLogs')
++      .finally(() => this.endLoader());
++    this.startLoader();
++    this.$store
++      .dispatch('remoteEmailLogs/getRemoteEmailLogs')
++      .finally(() => this.endLoader());
++    this.$store
++      .dispatch('remoteSNMPLogs/getRemoteSNMPLogs')
++      .finally(() => this.endLoader());
++  },
++  methods: {
++    onTableRowAction(event, rowItem) {
++      switch (event) {
++        case 'edit':
++          this.initModalUpdateRemoteLog(rowItem);
++          break;
++        case 'delete':
++          this.initModalDeleteRemoteLog(rowItem);
++          break;
++        default:
++          break;
++      }
++    },
++    initModalUpdateRemoteLog(remoteLog = null) {
++      this.modalRemoteLog = remoteLog;
++      this.$bvModal.show('update-remote-log');
++    },
++    initModalDeleteRemoteLog(remoteLog) {
++      this.$bvModal
++        .msgBoxConfirm(
++          this.$t('pageRemoteLogs.modal.deleteConfirmMessage', {
++            server: remoteLog.server,
++            serverPort: remoteLog.serverPort,
++          }),
++          {
++            title: this.$t('pageRemoteLogs.deleteRemoteLog'),
++            okTitle: this.$t('global.action.delete'),
++            cancelTitle: this.$t('global.action.cancel'),
++          }
++        )
++        .then((deleteConfirmed) => {
++          if (deleteConfirmed) this.deleteRemoteLog(remoteLog);
++        });
++    },
++    deleteRemoteLog({ server, serverPort, location }) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteLogs/deleteRemoteLog', {
++          server,
++          serverPort,
++          location,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++    onModalOk({ severity, substr, server, serverPort, connType, location }) {
++      if (location) {
++        // Replace an existing remote log
++        this.updateRemoteLog(
++          severity,
++          substr,
++          server,
++          serverPort,
++          connType,
++          location
++        );
++      } else {
++        // Upload a new remote log
++        this.addNewRemoteLog(severity, substr, server, serverPort, connType);
++      }
++    },
++    addNewRemoteLog(severity, substr, server, serverPort, connType) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteLogs/addNewRemoteLog', {
++          severity,
++          substr,
++          server,
++          serverPort,
++          connType,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++    updateRemoteLog(severity, substr, server, serverPort, connType, location) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteLogs/updateRemoteLog', {
++          severity,
++          substr,
++          server,
++          serverPort,
++          connType,
++          location,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++    // Remote Email Log
++    onEmailTableRowAction(event, rowItem) {
++      switch (event) {
++        case 'edit':
++          this.initModalUpdateRemoteEmailLog(rowItem);
++          break;
++        case 'delete':
++          this.initModalDeleteRemoteEmailLog(rowItem);
++          break;
++        default:
++          break;
++      }
++    },
++    initModalUpdateRemoteEmailLog(remoteEmailLog = null) {
++      this.modalRemoteEmailLog = remoteEmailLog;
++      this.$bvModal.show('update-remote-email-log');
++    },
++    initModalDeleteRemoteEmailLog(remoteEmailLog) {
++      this.$bvModal
++        .msgBoxConfirm(
++          this.$t('pageRemoteLogs.modal.deleteEmailConfirmMessage', {
++            server: remoteEmailLog.server,
++            serverPort: remoteEmailLog.serverPort,
++          }),
++          {
++            title: this.$t('pageRemoteLogs.deleteRemoteEmailLog'),
++            okTitle: this.$t('global.action.delete'),
++            cancelTitle: this.$t('global.action.cancel'),
++          }
++        )
++        .then((deleteConfirmed) => {
++          if (deleteConfirmed) this.deleteRemoteEmailLog(remoteEmailLog);
++        });
++    },
++    deleteRemoteEmailLog({ server, serverPort, location }) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteEmailLogs/deleteRemoteEmailLog', {
++          server,
++          serverPort,
++          location,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++    onEmailModalOk({
++      severity,
++      substr,
++      server,
++      serverPort,
++      connType,
++      userName,
++      userPass,
++      srcEmail,
++      destEmail,
++      location,
++    }) {
++      if (location) {
++        // Replace an existing remote log
++        this.updateRemoteEmailLog(
++          severity,
++          substr,
++          server,
++          serverPort,
++          connType,
++          userName,
++          userPass,
++          srcEmail,
++          destEmail,
++          location
++        );
++      } else {
++        // Upload a new remote log
++        this.addNewRemoteEmailLog(
++          severity,
++          substr,
++          server,
++          serverPort,
++          connType,
++          userName,
++          userPass,
++          srcEmail,
++          destEmail
++        );
++      }
++    },
++    addNewRemoteEmailLog(
++      severity,
++      substr,
++      server,
++      serverPort,
++      connType,
++      userName,
++      userPass,
++      srcEmail,
++      destEmail
++    ) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteEmailLogs/addNewRemoteEmailLog', {
++          severity,
++          substr,
++          server,
++          serverPort,
++          connType,
++          userName,
++          userPass,
++          srcEmail,
++          destEmail,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++    updateRemoteEmailLog(
++      severity,
++      substr,
++      server,
++      serverPort,
++      connType,
++      userName,
++      userPass,
++      srcEmail,
++      destEmail,
++      location
++    ) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteEmailLogs/updateRemoteEmailLog', {
++          severity,
++          substr,
++          server,
++          serverPort,
++          connType,
++          userName,
++          userPass,
++          srcEmail,
++          destEmail,
++          location,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++    // Remote SNMP Log
++    onSNMPTableRowAction(event, rowItem) {
++      switch (event) {
++        case 'edit':
++          this.initModalUpdateRemoteSNMPLog(rowItem);
++          break;
++        case 'delete':
++          this.initModalDeleteRemoteSNMPLog(rowItem);
++          break;
++        default:
++          break;
++      }
++    },
++    initModalUpdateRemoteSNMPLog(remoteSNMPLog = null) {
++      this.modalRemoteSNMPLog = remoteSNMPLog;
++      this.$bvModal.show('update-remote-snmp-log');
++    },
++    initModalDeleteRemoteSNMPLog(remoteSNMPLog) {
++      this.$bvModal
++        .msgBoxConfirm(
++          this.$t('pageRemoteLogs.modal.deleteSNMPConfirmMessage', {
++            server: remoteSNMPLog.server,
++            serverPort: remoteSNMPLog.serverPort,
++          }),
++          {
++            title: this.$t('pageRemoteLogs.deleteRemoteSNMPLog'),
++            okTitle: this.$t('global.action.delete'),
++            cancelTitle: this.$t('global.action.cancel'),
++          }
++        )
++        .then((deleteConfirmed) => {
++          if (deleteConfirmed) this.deleteRemoteSNMPLog(remoteSNMPLog);
++        });
++    },
++    deleteRemoteSNMPLog({ server, serverPort, location }) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteSNMPLogs/deleteRemoteSNMPLog', {
++          server,
++          serverPort,
++          location,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++    onSNMPModalOk({ severity, substr, server, serverPort, location }) {
++      if (location) {
++        // Replace an existing remote log
++        this.updateRemoteSNMPLog(
++          severity,
++          substr,
++          server,
++          serverPort,
++          location
++        );
++      } else {
++        // Upload a new remote log
++        this.addNewRemoteSNMPLog(severity, substr, server, serverPort);
++      }
++    },
++    addNewRemoteSNMPLog(severity, substr, server, serverPort) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteSNMPLogs/addNewRemoteSNMPLog', {
++          severity,
++          substr,
++          server,
++          serverPort,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++    updateRemoteSNMPLog(severity, substr, server, serverPort, location) {
++      this.startLoader();
++      this.$store
++        .dispatch('remoteSNMPLogs/updateRemoteSNMPLog', {
++          severity,
++          substr,
++          server,
++          serverPort,
++          location,
++        })
++        .then((success) => this.successToast(success))
++        .catch(({ message }) => this.errorToast(message))
++        .finally(() => this.endLoader());
++    },
++  },
++};
++</script>

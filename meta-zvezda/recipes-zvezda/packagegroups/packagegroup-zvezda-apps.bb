@@ -50,6 +50,7 @@ RDEPENDS:${PN}-system = " \
         phosphor-host-postd \
         intel-ipmi-oem \
         snmpctl \
+        msmtp \
         peci-pcie \
         smbios-mdr \
         phosphor-misc-http-redirect-awk \
