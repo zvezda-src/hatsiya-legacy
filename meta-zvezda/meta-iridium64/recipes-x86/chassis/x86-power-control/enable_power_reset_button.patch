@@ -1,0 +1,23 @@
+diff --git a/src/power_control.cpp b/src/power_control.cpp
+index 514806a..aecb303 100644
+--- a/src/power_control.cpp
++++ b/src/power_control.cpp
+@@ -1685,6 +1685,10 @@ static void powerStateOn(const Event event)
+         case Event::powerButtonPressed:
+             setPowerState(PowerState::gracefulTransitionToOff);
+             gracefulPowerOffTimerStart();
++            gracefulPowerOff();
++            break;
++        case Event::resetButtonPressed:
++            reset();
+             break;
+         case Event::powerOffRequest:
+             setPowerState(PowerState::transitionToOff);
+@@ -1794,6 +1798,7 @@ static void powerStateOff(const Event event)
+         case Event::powerButtonPressed:
+             psPowerOKWatchdogTimerStart();
+             setPowerState(PowerState::waitForPSPowerOK);
++            powerOn();
+             break;
+         case Event::powerOnRequest:
+             psPowerOKWatchdogTimerStart();

@@ -1,0 +1,27 @@
+diff --git a/config/power-config-host0.json b/config/power-config-host0.json
+index ed91470..3d5400e 100644
+--- a/config/power-config-host0.json
++++ b/config/power-config-host0.json
+@@ -56,19 +56,19 @@
+     },
+     {
+         "Name" : "SioOnControl",
+-        "LineName" : "SIO_ONCONTROL",
++        "LineName" : "",
+         "Type" : "GPIO",
+         "Polarity" : "ActiveLow"
+     },
+     {
+         "Name" : "SioPowerGood",
+-        "LineName" : "SIO_POWER_GOOD",
++        "LineName" : "",
+         "Type" : "GPIO",
+         "Polarity" : "ActiveHigh"
+     },
+     {
+         "Name" : "SIOS5",
+-        "LineName" : "SIO_S5",
++        "LineName" : "",
+         "Type" : "GPIO",
+         "Polarity" : "ActiveLow"
+     }

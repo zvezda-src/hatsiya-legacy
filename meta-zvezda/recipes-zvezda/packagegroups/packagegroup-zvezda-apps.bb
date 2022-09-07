@@ -5,7 +5,7 @@ inherit packagegroup
 
 PROVIDES = "${PACKAGES}"
 PACKAGES = " \
-        ${PN}-extras \
+        ${PN}-chassis \
         ${PN}-fans \
         ${PN}-flash \
         ${PN}-system \
@@ -22,7 +22,8 @@ RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
 
 SUMMARY:${PN}-chassis = "Zvezda Chassis"
 RDEPENDS:${PN}-chassis = " \
-        pwr-ctrl \                
+        x86-power-control \
+        obmc-host-failure-reboots \ 
         "
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
