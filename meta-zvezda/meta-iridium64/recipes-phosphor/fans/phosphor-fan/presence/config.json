@@ -1,0 +1,92 @@
+[
+   {
+      "name": "Fan1",
+      "path": "/system/chassis/motherboard/Fan1",
+      "methods": [
+         {
+            "type": "tach",
+            "sensors": [
+               "Fan1"
+            ]
+         }
+      ],
+      "rpolicy": {
+         "type": "anyof"
+      }
+   },
+   {
+      "name": "Fan2",
+      "path": "/system/chassis/motherboard/Fan2",
+      "methods": [
+         {
+            "type": "tach",
+            "sensors": [
+               "Fan2"
+            ]
+         }
+      ],
+      "rpolicy": {
+         "type": "anyof"
+      }
+   },
+   {
+      "name": "Fan3",
+      "path": "/system/chassis/motherboard/Fan3",
+      "methods": [
+         {
+            "type": "tach",
+            "sensors": [
+               "Fan3"
+            ]
+         }
+      ],
+      "rpolicy": {
+         "type": "anyof"
+      }
+   },
+   {
+      "name": "Fan4",
+      "path": "/system/chassis/motherboard/Fan4",
+      "methods": [
+         {
+            "type": "tach",
+            "sensors": [
+               "Fan4"
+            ]
+         }
+      ],
+      "rpolicy": {
+         "type": "anyof"
+      }
+   },
+   {
+      "name": "Fan5",
+      "path": "/system/chassis/motherboard/Fan5",
+      "methods": [
+         {
+            "type": "tach",
+            "sensors": [
+               "Fan5"
+            ]
+         }
+      ],
+      "rpolicy": {
+         "type": "anyof"
+      }
+   },
+   {
+      "name": "Fan6",
+      "path": "/system/chassis/motherboard/Fan6",
+      "methods": [
+         {
+            "type": "tach",
+            "sensors": [
+               "Fan6"
+            ]
+         }
+      ],
+      "rpolicy": {
+         "type": "anyof"
+      }
+   }
+]

@@ -27,7 +27,8 @@ RDEPENDS:${PN}-chassis = " \
         "
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
-RDEPENDS:${PN}-fans = ""
+RDEPENDS:${PN}-fans = " \
+	"
 
 SUMMARY:${PN}-flash = "Zvezda Flash"
 RDEPENDS:${PN}-flash = " \
@@ -40,19 +41,18 @@ RDEPENDS:${PN}-system = " \
 	webui-vue \
 	libpeci \
 	button-ctrl \
-        entity-manager \
-        fan-control \
-        boardinfo \
-        ipmitool \
-        phosphor-hostlogger \
-        phosphor-sel-logger \
-        phosphor-post-code-manager \
-        phosphor-host-postd \
-        intel-ipmi-oem \
-        snmpctl \
-        msmtp \
-        peci-pcie \
-        smbios-mdr \
-        phosphor-misc-http-redirect-awk \
-        iio-hwmon \
+	entity-manager \
+	boardinfo \
+	ipmitool \
+	phosphor-hostlogger \
+	phosphor-sel-logger \
+	phosphor-post-code-manager \
+	phosphor-host-postd \
+	intel-ipmi-oem \
+	snmpctl \
+	msmtp \
+	peci-pcie \
+	smbios-mdr \
+	phosphor-misc-http-redirect-awk \
+	iio-hwmon \
         "

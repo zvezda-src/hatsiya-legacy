@@ -1,0 +1,62 @@
+[
+   {
+     "name": "FANs CPU Inventory",
+     "members": [
+       "/xyz/openbmc_project/inventory/system/chassis/motherboard/Fan4",
+       "/xyz/openbmc_project/inventory/system/chassis/motherboard/Fan5",
+       "/xyz/openbmc_project/inventory/system/chassis/motherboard/Fan6",
+       "/xyz/openbmc_project/inventory/system/chassis/motherboard/Fan1",
+       "/xyz/openbmc_project/inventory/system/chassis/motherboard/Fan2",
+       "/xyz/openbmc_project/inventory/system/chassis/motherboard/Fan3"
+     ]
+   },
+      {
+     "name": "FANs CPU RPM",
+     "members": [
+       "/xyz/openbmc_project/sensors/fan_tach/Fan4",
+       "/xyz/openbmc_project/sensors/fan_tach/Fan5",
+       "/xyz/openbmc_project/sensors/fan_tach/Fan6",
+       "/xyz/openbmc_project/sensors/fan_tach/Fan1",
+       "/xyz/openbmc_project/sensors/fan_tach/Fan2",
+       "/xyz/openbmc_project/sensors/fan_tach/Fan3"
+     ]
+   },
+   {
+   "name": "CPU Temp",
+   "service": "xyz.openbmc_project.Hwmon-72276404a0aadef082bf7f9f00450f7e5a25c2c30b8e73b478c27810fa7755b7.Hwmon1",
+   "members": [
+     "/xyz/openbmc_project/sensors/temperature/Current_CPU0"
+     ]
+   },
+   {
+   "name": "DIMMs Temp",
+   "service": "xyz.openbmc_project.Hwmon-73f71134d2c175e684257bfdb3dcc586514dcdf83996add942cc05ec78ea1ac6.Hwmon1",
+   "members": [
+     "/xyz/openbmc_project/sensors/temperature/DIMM_C1_CPU0"
+     ]
+   },
+   {
+   "name": "CPU VR Temp",
+   "service": "xyz.openbmc_project.Hwmon-55bd1803dcf67b9a14c56df93c8b860372c3db153e8f98cb2f0b467f6ea9b801.Hwmon1",
+   "members": [
+     "/xyz/openbmc_project/sensors/temperature/CPU0_VR",
+     "/xyz/openbmc_project/sensors/temperature/CPU1_VR"
+     ]
+   },
+   {
+   "name": "BMC&Ext1 Temp",
+   "service": "xyz.openbmc_project.Hwmon-066a1fe72ec53d35af42416a0278ab68eca5c7ba00ec0cb8b75a970c149ff3f2.Hwmon1",
+   "members": [
+     "/xyz/openbmc_project/sensors/temperature/BMC",
+     "/xyz/openbmc_project/sensors/temperature/External_Temp_2"
+     ]
+   },
+   {
+   "name": "OCPv3&Ext2 Temp",
+   "service": "xyz.openbmc_project.Hwmon-5f360856655b368922920b842360040ad9dd1ac650aa96ffb5d81451d250b3f8.Hwmon1",
+   "members": [
+     "/xyz/openbmc_project/sensors/temperature/External_Temp_1",
+     "/xyz/openbmc_project/sensors/temperature/OCPv3"
+     ]
+   }
+]

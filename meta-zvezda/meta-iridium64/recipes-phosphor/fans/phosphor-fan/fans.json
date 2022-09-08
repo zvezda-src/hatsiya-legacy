@@ -1,0 +1,38 @@
+[
+    {
+        "name": "Fan1",
+        "zone": "CPU1",
+        "sensors": ["Fan1"],
+        "target_interface": "xyz.openbmc_project.Control.FanPwm"
+    },
+    {
+        "name": "Fan2",
+        "zone": "CPU1",
+        "sensors": ["Fan2"],
+        "target_interface": "xyz.openbmc_project.Control.FanPwm"
+    },
+    {
+        "name": "Fan3",
+        "zone": "CPU1",
+        "sensors": ["Fan3"],
+        "target_interface": "xyz.openbmc_project.Control.FanPwm"
+    },
+    {
+        "name": "Fan4",
+        "zone": "CPU0",
+        "sensors": ["Fan4"],
+        "target_interface": "xyz.openbmc_project.Control.FanPwm"
+    },
+    {
+        "name": "Fan5",
+        "zone": "CPU0",
+        "sensors": ["Fan5"],
+        "target_interface": "xyz.openbmc_project.Control.FanPwm"
+    },
+    {
+        "name": "Fan6",
+        "zone": "CPU0",
+        "sensors": ["Fan6"],
+        "target_interface": "xyz.openbmc_project.Control.FanPwm"
+    }
+]

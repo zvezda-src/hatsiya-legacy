@@ -1,0 +1,17 @@
+[
+{
+  "name": "CPU0",
+  "poweron_target": 255,
+  "default_floor": 40,
+  "increase_delay": 5,
+  "decrease_interval": 5
+},
+{
+  "name": "CPU1",
+  "poweron_target": 255,
+  "default_floor": 40,
+  "increase_delay": 5,
+  "decrease_interval": 5
+}
+
+]
