@@ -230,6 +230,26 @@
 
 &i2c5 {
 	status = "okay";
+	i2c-switch@77 {
+        	compatible = "nxp,pca9541";
+        	reg = <0x77>;
+        	#address-cells = <1>;
+        	#size-cells = <0>;
+        	i2c-mux-idle-disconnect;
+
+        	i2c_pmbus0: i2c@68 {
+        		compatible = "pmbus";
+            		#address-cells = <1>;
+            		#size-cells = <0>;
+            		reg = <68>;
+        	};
+        	i2c_pmbus1: i2c@69 {
+        		compatible = "pmbus";
+            		#address-cells = <1>;
+            		#size-cells = <0>;
+            		reg = <69>;
+        	};
+    };
 };
 
 &i2c6 {
@@ -270,8 +290,7 @@
 				&pinctrl_pwm2_default
 				&pinctrl_pwm3_default
 				&pinctrl_pwm4_default
-				&pinctrl_pwm5_default
-				&pinctrl_pwm6_default>;
+				&pinctrl_pwm5_default>;
 
 	fan@0 {
 		reg = <0x00>;
@@ -279,32 +298,27 @@
 	};
 
 	fan@1 {
-		reg = <0x00>;
+		reg = <0x01>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x01>;
 	};
 
 	fan@2 {
-		reg = <0x01>;
+		reg = <0x02>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x02>;
 	};
 
 	fan@3 {
-		reg = <0x01>;
+		reg = <0x03>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x03>;
 	};
 
 	fan@4 {
-		reg = <0x02>;
+		reg = <0x04>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x04>;
 	};
 
 	fan@5 {
-		reg = <0x02>;
+		reg = <0x05>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x05>;
-	};
-
-	fan@6 {
-		reg = <0x03>;
-		aspeed,fan-tach-ch = /bits/ 8 <0x06>;
 	};
 };
