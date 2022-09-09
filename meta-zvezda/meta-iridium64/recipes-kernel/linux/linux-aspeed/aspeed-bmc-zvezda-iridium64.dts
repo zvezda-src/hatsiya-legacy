@@ -95,6 +95,21 @@
 	};
 };
 
+&spi2 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_spi2ck_default
+			&pinctrl_spi2miso_default
+			&pinctrl_spi2mosi_default
+			&pinctrl_spi2cs0_default>;
+	flash@0 {
+		status = "okay";
+		label = "bios";
+		m25p,fast-read;
+	};
+};
+
+
 &lpc_ctrl {
 	status = "okay";
 	memory-region = <&flash_memory>;
@@ -230,25 +245,26 @@
 
 &i2c5 {
 	status = "okay";
-	i2c-switch@77 {
+	pca9541a@77 {
         	compatible = "nxp,pca9541";
         	reg = <0x77>;
-        	#address-cells = <1>;
-        	#size-cells = <0>;
-        	i2c-mux-idle-disconnect;
+		
+		i2c-arb {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
 
-        	i2c_pmbus0: i2c@68 {
-        		compatible = "pmbus";
-            		#address-cells = <1>;
-            		#size-cells = <0>;
-            		reg = <68>;
-        	};
-        	i2c_pmbus1: i2c@69 {
-        		compatible = "pmbus";
-            		#address-cells = <1>;
-            		#size-cells = <0>;
-            		reg = <69>;
-        	};
+			psu@58 {
+				compatible = "pmbus";
+				reg = <0x58>;
+			};
+			
+			psu@59 {
+				compatible = "pmbus";
+				reg = <0x59>;
+			};
+			
+		};
     };
 };
 
@@ -265,6 +281,22 @@
 };
 
 &i2c9 {
+	status = "okay";
+};
+
+&i2c10 {
+	status = "okay";
+};
+
+&i2c11 {
+	status = "okay";
+};
+
+&i2c12 {
+	status = "okay";
+};
+
+&i2c13 {
 	status = "okay";
 };
 

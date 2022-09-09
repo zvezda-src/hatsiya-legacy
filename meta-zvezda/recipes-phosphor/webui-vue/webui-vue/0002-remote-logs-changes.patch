@@ -15,9 +15,9 @@ diff -r -u --new-file a/src/components/AppNavigation/AppNavigationMixin.js b/src
 +              label: this.$t('appNavigation.eventLogs2'),
 +              route: '/logs/event-logs2',
 +            },
-             // {
-             //   id: 'post-code-logs',
-             //   label: this.$t('appNavigation.postCodeLogs'),
+             {
+               id: 'post-code-logs',
+               label: this.$t('appNavigation.postCodeLogs'),
 @@ -123,6 +133,11 @@
                label: this.$t('appNavigation.powerRestorePolicy'),
                route: '/settings/power-restore-policy',

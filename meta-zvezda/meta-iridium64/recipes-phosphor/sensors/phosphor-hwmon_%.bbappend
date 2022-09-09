@@ -6,6 +6,8 @@ CHIPS = " \
         bus@1e78a000/i2c-bus@100/lm95241@19 \
         bus@1e78a000/i2c-bus@100/lm95241@2a \
         bus@1e78a000/i2c-bus@100/lm95241@2b \
+        bus@1e78a000/i2c-bus@180/pca9541a@77/i2c-arb/psu@58 \
+        bus@1e78a000/i2c-bus@180/pca9541a@77/i2c-arb/psu@59 \
         pwm-tacho-controller@1e786000 \
         "
 ITEMSFMT = "ahb/apb/{0}.conf"
