@@ -1,6 +1,9 @@
 FILESEXTRAPATHS:prepend:iridium64 := "${THISDIR}/${PN}:"
 
-EXTRA_OEMESON:append:iridium64 = " -Dupdate-functional-on-fail=true -Dnegative-errno-on-fail=false"
+EXTRA_OEMESON:append:iridium64 = " -Dupdate-functional-on-fail=true -Dnegative-errno-on-fail=true"
+
+SRC_URI:prepend = "file://errno_on_fail_return_zero.patch \
+                 "
 
 CHIPS = " \
         bus@1e78a000/i2c-bus@100/lm95241@19 \

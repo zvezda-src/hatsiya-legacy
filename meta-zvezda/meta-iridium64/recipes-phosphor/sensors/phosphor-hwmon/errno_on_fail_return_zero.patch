@@ -1,0 +1,13 @@
+diff --git a/sensor.cpp b/sensor.cpp
+index 2f6ee34..5c2740f 100644
+--- a/sensor.cpp
++++ b/sensor.cpp
+@@ -100,7 +100,7 @@ SensorValueType Sensor::adjustValue(SensorValueType value)
+ #if NEGATIVE_ERRNO_ON_FAIL
+     if (value < 0)
+     {
+-        return value;
++        return 0;
+     }
+ #endif
+ 

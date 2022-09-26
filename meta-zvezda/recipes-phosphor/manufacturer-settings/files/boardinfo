@@ -23,7 +23,7 @@ inventory()
          /xyz/openbmc_project/inventory/system/board/Zvezda_Iridium_Baseboard \
           xyz.openbmc_project.Inventory.Decorator.Asset PartNumber s $pn
 
-        sethostname $sn $1
+#        sethostname $sn $1
     fi
 }
 
