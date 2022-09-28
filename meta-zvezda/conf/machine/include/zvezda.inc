@@ -1,4 +1,4 @@
-OBMC_MACHINE_FEATURES += "\
+MACHINE_FEATURES += "\
         obmc-bmc-state-mgmt \
         obmc-chassis-state-mgmt \
         obmc-host-ipmi \
@@ -12,10 +12,12 @@ VIRTUAL-RUNTIME_skeleton_workbook = "${MACHINE}-config"
 VIRTUAL-RUNTIME_obmc-host-state-manager ?= "x86-power-control"
 VIRTUAL-RUNTIME_obmc-chassis-state-manager ?= "x86-power-control"
 
+
 PREFERRED_PROVIDER:virtual/obmc-chassis-mgmt = "packagegroup-zvezda-apps"
 PREFERRED_PROVIDER:virtual/obmc-fan-mgmt = "packagegroup-zvezda-apps"
 PREFERRED_PROVIDER:virtual/obmc-flash-mgmt = "packagegroup-zvezda-apps"
 PREFERRED_PROVIDER:virtual/obmc-inventory-data ?= "${VIRTUAL-RUNTIME_skeleton_workbook}"
 PREFERRED_PROVIDER:virtual/obmc-system-mgmt = "packagegroup-zvezda-apps"
+PREFERRED_PROVIDER_virtual/obmc-host-ipmi-hw = "phosphor-ipmi-kcs"
 
 OVERRIDES .= ":zvezda"

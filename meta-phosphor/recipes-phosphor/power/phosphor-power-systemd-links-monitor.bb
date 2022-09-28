@@ -14,7 +14,7 @@ ALLOW_EMPTY:${PN} = "1"
 pkg_postinst:${PN}() {
 	mkdir -p $D$systemd_system_unitdir/multi-user.target.requires
 
-	[ -z "${OBMC_POWER_SUPPLY_INSTANCES}" ] && echo "No power supply instance defined" && exit 1
+	[ -z "${OBMC_POWER_SUPPLY_INSTANCES}" ] && echo "No power supply instance defined" && exit
 
 	for inst in ${OBMC_POWER_SUPPLY_INSTANCES}; do
 		LINK="$D$systemd_system_unitdir/multi-user.target.requires/power-supply-monitor@$inst.service"
@@ -24,7 +24,7 @@ pkg_postinst:${PN}() {
 }
 
 pkg_prerm:${PN}() {
-	[ -z "${OBMC_POWER_SUPPLY_INSTANCES}" ] && echo "No power supply instance defined" && exit 1
+	[ -z "${OBMC_POWER_SUPPLY_INSTANCES}" ] && echo "No power supply instance defined" && exit
 
 	for inst in ${OBMC_POWER_SUPPLY_INSTANCES}; do
 		LINK="$D$systemd_system_unitdir/multi-user.target.requires/power-supply-monitor@$inst.service"

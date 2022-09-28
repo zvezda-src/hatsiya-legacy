@@ -68,10 +68,9 @@ if [[ $1 == "--chmac" ]]; then
     mac2=${macfield:19}
 
     setmac $mac1 eth0
-    setmac $mac2 eth1
+#    setmac $mac2 eth1
     
     echo "Please de-energize chassis"
 fi
 
-inventory $(cat /sys/class/net/eth1/address)
-    
+inventory $(cat /sys/class/net/eth0/address)

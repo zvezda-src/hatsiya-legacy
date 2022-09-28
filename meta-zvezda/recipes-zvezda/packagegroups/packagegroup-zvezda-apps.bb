@@ -22,8 +22,8 @@ RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
 
 SUMMARY:${PN}-chassis = "Zvezda Chassis"
 RDEPENDS:${PN}-chassis = " \
-        x86-power-control \
-        obmc-host-failure-reboots \ 
+	x86-power-control \
+	obmc-host-failure-reboots \ 
         "
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
@@ -49,10 +49,15 @@ RDEPENDS:${PN}-system = " \
 	phosphor-post-code-manager \
 	phosphor-host-postd \
 	intel-ipmi-oem \
+	phosphor-ipmi-ipmb \
 	snmpctl \
 	msmtp \
 	peci-pcie \
 	smbios-mdr \
 	phosphor-misc-http-redirect-awk \
 	iio-hwmon \
-        "
+	phosphor-power-systemd-links-monitor \
+	phosphor-power-utils \
+	phosphor-power \
+	phosphor-power-psu-monitor \
+	        "
