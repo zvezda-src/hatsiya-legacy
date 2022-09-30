@@ -81,7 +81,7 @@
          "property": { "name": "Value" }
        }
      ],
-     "state": 50.0,
+     "state": 60.0,
      "delta": 5
        },
        {
@@ -98,7 +98,7 @@
          "property": { "name": "Value" }
        }
       ],
-     "state": 40.0,
+     "state": 50.0,
      "delta": 5
        }
      ]

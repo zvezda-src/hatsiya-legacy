@@ -12,7 +12,6 @@ VIRTUAL-RUNTIME_skeleton_workbook = "${MACHINE}-config"
 VIRTUAL-RUNTIME_obmc-host-state-manager ?= "x86-power-control"
 VIRTUAL-RUNTIME_obmc-chassis-state-manager ?= "x86-power-control"
 
-
 PREFERRED_PROVIDER:virtual/obmc-chassis-mgmt = "packagegroup-zvezda-apps"
 PREFERRED_PROVIDER:virtual/obmc-fan-mgmt = "packagegroup-zvezda-apps"
 PREFERRED_PROVIDER:virtual/obmc-flash-mgmt = "packagegroup-zvezda-apps"

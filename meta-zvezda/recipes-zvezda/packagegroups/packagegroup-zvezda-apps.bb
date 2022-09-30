@@ -48,7 +48,7 @@ RDEPENDS:${PN}-system = " \
 	phosphor-sel-logger \
 	phosphor-post-code-manager \
 	phosphor-host-postd \
-	intel-ipmi-oem \
+	phosphor-ipmi-host \
 	phosphor-ipmi-ipmb \
 	snmpctl \
 	msmtp \
