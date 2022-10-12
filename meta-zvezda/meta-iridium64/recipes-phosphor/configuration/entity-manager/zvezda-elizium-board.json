@@ -2,7 +2,7 @@
     {
         "Exposes": [],
         "Name": "Zvezda Elizium Baseboard",
-        "Probe": "xyz.openbmc_project.FruDevice({'PRODUCT_PRODUCT_NAME': 'Elizium'})",
+        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'Elizium'})",
         "Type": "Board",
         "xyz.openbmc_project.Inventory.Decorator.Asset": {
             "Manufacturer": "$BOARD_MANUFACTURER",

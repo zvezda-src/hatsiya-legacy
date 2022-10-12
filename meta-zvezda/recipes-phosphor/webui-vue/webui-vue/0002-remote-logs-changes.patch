@@ -854,7 +854,7 @@ diff -r -u --new-file a/src/views/Logs/EventLogs/EventLogs.vue b/src/views/Logs/
 diff -r -u --new-file a/src/views/Logs/EventLogs1/EventLogs1.vue b/src/views/Logs/EventLogs1/EventLogs1.vue
 --- a/src/views/Logs/EventLogs1/EventLogs1.vue	1970-01-01 03:00:00.000000000 +0300
 +++ b/src/views/Logs/EventLogs1/EventLogs1.vue	2022-09-06 20:31:24.073945819 +0300
-@@ -0,0 +1,607 @@
+@@ -0,0 +1,610 @@
 +<template>
 +  <b-container fluid="xl">
 +    <page-title />
@@ -1293,8 +1293,11 @@ diff -r -u --new-file a/src/views/Logs/EventLogs1/EventLogs1.vue b/src/views/Log
 +    },
 +    filteredLogs() {
 +      const my_filters = [
-+        { key: 'description', values: 'system' },
-+        { key: 'description', values: 'ipmi' },
++        { key: 'description', values: 'bmcweb' },
++        { key: 'description', values: 'peci-peci' },
++        { key: 'description', values: 'health-monitor' },
++        { key: 'description', values: 'entity-manager' },
++        { key: 'description', values: 'fru-device' },
 +      ];
 +      return this.getFilteredTableData1(this.filteredLogs1, my_filters);
 +    },

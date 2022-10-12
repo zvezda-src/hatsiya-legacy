@@ -42,7 +42,6 @@ RDEPENDS:${PN}-system = " \
 	libpeci \
 	button-ctrl \
 	entity-manager \
-	boardinfo \
 	ipmitool \
 	phosphor-hostlogger \
 	phosphor-sel-logger \
