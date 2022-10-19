@@ -52,11 +52,91 @@
                 };
         };
 
-        iio-hwmon {
-                compatible = "iio-hwmon";
-		io-channels = <&adc 0>, <&adc 1>, <&adc 2>, <&adc 3>,
-		              <&adc 4>, <&adc 5>, <&adc 6>, <&adc 7>;
+//        iio-hwmon {
+//                compatible = "iio-hwmon";
+//		io-channels = <&adc 0>, <&adc 1>, <&adc 2>, <&adc 3>,
+//		              <&adc 4>, <&adc 5>, <&adc 6>, <&adc 7>
+//	};
+	iio-hwmon-12v {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 0>;
 	};
+
+	iio-hwmon-5v {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 1>;
+	};
+
+	iio-hwmon-3v {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 2>;
+	};
+
+	iio-hwmon-pvccin-cpu1 {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 3>;
+	};
+
+	iio-hwmon-pvccin-cpu2 {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 4>;
+	};
+
+	iio-hwmon-pvccio-cpu1 {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 5>;
+	};
+
+	iio-hwmon-pvccio-cpu2 {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 6>;
+	};
+	
+	iio-hwmon-vbat {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 7>;
+	};
+
+	iio-hwmon-pvddq-abcd-cpu1 {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 8>;
+	};
+
+	iio-hwmon-pvddq-efgh-cpu1 {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 9>;
+	};
+
+	iio-hwmon-pvddq-abcd-cpu2 {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 10>;
+	};
+
+	iio-hwmon-pvddq-efgh-cpu2 {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 11>;
+	};
+
+	iio-hwmon-p1v05-pch-aux {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 12>;
+	};
+
+	iio-hwmon-pvnn-pch-aux {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 13>;
+	};
+
+	iio-hwmon-p1v8-pch-aux {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 14>;
+	};
+
+	iio-hwmon-pgppa-aux {
+		compatible = "iio-hwmon";
+		io-channels = <&adc 15>;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
@@ -160,7 +240,7 @@
 	/*V0-V7*/	"","","","","","","","",
 	/*W0-W7*/	"","","","","","","","",
 	/*X0-X7*/	"","","","","","","","",
-	/*Y0-Y7*/	"SIO_S3","SIO_S5","","SIO_ONCONTROL","","","","",
+	/*Y0-Y7*/	"SIO_S3","SIO_S5","","VBAT_VSEN8","","","","",
 	/*Z0-Z7*/	"","SIO_POWER_GOOD","","","","","","",
 	/*AA0-AA7*/	"","","","","","","","",
 	/*AB0-AB7*/	"POST_COMPLETE","","","","","","","",

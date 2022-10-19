@@ -1,0 +1,67 @@
+diff --git a/mainapp.cpp b/mainapp.cpp
+index 789dfe1..538c5fb 100644
+--- a/mainapp.cpp
++++ b/mainapp.cpp
+@@ -104,7 +104,7 @@ static void createDbusObj(sdbusplus::asio::object_server& server,
+         iter->valueIface->initialize();
+         iter->critIface = server.add_interface(
+             iter->path, "xyz.openbmc_project.Sensor.Threshold.Critical");
+-        if (iter->path == "/xyz/openbmc_project/sensors/voltage/VBAT")
++        if (iter->path == "/xyz/openbmc_project/sensors/voltage/VBAT_Voltage")
+         {
+             iter->critIface->register_property(
+                 "WarningLow", 2.6,
+@@ -136,37 +136,37 @@ int main()
+ 
+     // init iio entities vector
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PLUS12V", 12.9, 11.16, 8.2, 1.0});
++        iioEntity{12.8, 11.26, "PLUS12V_Voltage", 12.9, 11.16, 8.2, 1.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PLUS5V", 5.37, 4.65, 3.0, 1.0});
++        iioEntity{nullptr, nullptr, "PLUS5V_Voltage", 5.37, 4.65, 3.0, 1.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PLUS3DOT3V", 3.54, 3.06, 1.8, 1.0});
++        iioEntity{nullptr, nullptr, "PLUS3DOT3V_Voltage", 3.54, 3.06, 1.8, 1.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVCCIN_CPU0", 2.04, 1.56, 1.0, 3.0});
++        iioEntity{nullptr, nullptr, "PVCCIN_CPU0_Voltage", 2.04, 1.56, 1.0, 3.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVCCIN_CPU1", 2.04, 1.56, 1.0, 3.0});
++        iioEntity{nullptr, nullptr, "PVCCIN_CPU1_Voltage", 2.04, 1.56, 1.0, 3.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVCCIO_CPU0", 1.25, 0.75, 1.0, 1.0});
++        iioEntity{nullptr, nullptr, "PVCCIO_CPU0_Voltage", 1.25, 0.75, 1.0, 1.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVCCIO_CPU1", 1.25, 0.75, 1.0, 1.0});
++        iioEntity{nullptr, nullptr, "PVCCIO_CPU1_Voltage", 1.25, 0.75, 1.0, 1.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "VBAT", 0, 2.5, 787.0, 402.0});
++        iioEntity{nullptr, nullptr, "VBAT_Voltage", 0, 2.5, 787.0, 402.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVDDQ_ABCD_CPU0", 1.29, 1.11, 1.0, 0});
++        iioEntity{nullptr, nullptr, "PVDDQ_ABCD_CPU0_Voltage", 1.29, 1.11, 1.0, 0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVDDQ_EFGH_CPU0", 1.29, 1.11, 1.0, 0});
++        iioEntity{nullptr, nullptr, "PVDDQ_EFGH_CPU0_Voltage", 1.29, 1.11, 1.0, 0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVDDQ_ABCD_CPU1", 1.29, 1.11, 1.0, 0});
++        iioEntity{nullptr, nullptr, "PVDDQ_ABCD_CPU1_Voltage", 1.29, 1.11, 1.0, 0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVDDQ_EFGH_CPU1", 1.29, 1.11, 1.0, 0});
++        iioEntity{nullptr, nullptr, "PVDDQ_EFGH_CPU1_Voltage", 1.29, 1.11, 1.0, 0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "P1V05_PCH", 1.11, 0.99, 1.0, 0});
++        iioEntity{nullptr, nullptr, "P1V05_PCH_Voltage", 1.11, 0.99, 1.0, 0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PVNN_PCH", 1.07, 0.93, 1.0, 0});
++        iioEntity{nullptr, nullptr, "PVNN_PCH_Voltage", 1.07, 0.93, 1.0, 0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "P1V8_PCH", 1.94, 1.66, 5.6, 15.0});
++        iioEntity{nullptr, nullptr, "P1V8_PCH_Voltage", 1.94, 1.66, 5.6, 15.0});
+     entities.push_back(
+-        iioEntity{nullptr, nullptr, "PGPPA_PCH", 3.54, 3.06, 1.8, 1});
++        iioEntity{nullptr, nullptr, "PGPPA_PCH_Voltage", 3.54, 3.06, 1.8, 1});
+ 
+     // init dbus
+     auto iioServer = sdbusplus::asio::object_server(conn);

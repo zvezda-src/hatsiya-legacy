@@ -843,8 +843,8 @@ diff -r -u --new-file a/src/views/Logs/EventLogs/EventLogs.vue b/src/views/Logs/
      },
 +    filteredLogs() {
 +      const my_filters = [
-+        { key: 'description', values: 'phosphor' },
-+        { key: 'description', values: 'bmc' },
++        { key: 'description', values: 'phosphor-hwmon' },
++        { key: 'description', values: 'phosphor-fan' },
 +      ];
 +      return this.getFilteredTableData1(this.filteredLogs1, my_filters);
 +    },

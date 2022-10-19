@@ -17,6 +17,24 @@ ITEMSFMT = "ahb/apb/{0}.conf"
 
 ITEMS = "${@compose_list(d, 'ITEMSFMT', 'CHIPS')}"
 
+ITEMS:append:iridium64 += " iio-hwmon-pvccin-cpu1.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pvccin-cpu2.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pvccio-cpu1.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pvccio-cpu2.conf"
+ITEMS:append:iridium64 += " iio-hwmon-vbat.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pvddq-abcd-cpu1.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pvddq-abcd-cpu2.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pvddq-efgh-cpu1.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pvddq-efgh-cpu2.conf"
+ITEMS:append:iridium64 += " iio-hwmon-p1v05-pch-aux.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pvnn-pch-aux.conf"
+ITEMS:append:iridium64 += " iio-hwmon-p1v8-pch-aux.conf"
+ITEMS:append:iridium64 += " iio-hwmon-12v.conf"
+ITEMS:append:iridium64 += " iio-hwmon-5v.conf"
+ITEMS:append:iridium64 += " iio-hwmon-3v.conf"
+ITEMS:append:iridium64 += " iio-hwmon-pgppa-aux.conf"
+
+
 ENVS = "obmc/hwmon/{0}"
 SYSTEMD_ENVIRONMENT_FILE:${PN}:append:iridium64 := "${@compose_list(d, 'ENVS', 'ITEMS')}"
 

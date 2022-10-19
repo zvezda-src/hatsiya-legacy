@@ -32,7 +32,7 @@
      "name": "System FAN",
      "groups": [
        {
-         "name": "CPU Temp",
+         "name": "CPUs Temp",
          "interface": "xyz.openbmc_project.Sensor.Value",
          "property": { "name": "Value" }
        },
@@ -47,12 +47,22 @@
          "property": { "name": "Value" }
        },
        {
-         "name": "BMC&Ext1 Temp",
+         "name": "BMC Temp",
          "interface": "xyz.openbmc_project.Sensor.Value",
          "property": { "name": "Value" }
        },
        {
-         "name": "OCPv3&Ext2 Temp",
+         "name": "OCPv3 Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "Ambient Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "Inlet Temp",
          "interface": "xyz.openbmc_project.Sensor.Value",
          "property": { "name": "Value" }
        }
@@ -71,34 +81,98 @@
          "name": "set_net_increase_target",
          "groups": [
        {
-         "name": "CPU0 Temp",
+         "name": "CPUs Temp",
          "interface": "xyz.openbmc_project.Sensor.Value",
          "property": { "name": "Value" }
        },
        {
-         "name": "DIMMs_CPU0_ABCD Temp",
+         "name": "DIMMs Temp",
          "interface": "xyz.openbmc_project.Sensor.Value",
          "property": { "name": "Value" }
        }
      ],
-     "state": 60.0,
+     "state": 50.0,
      "delta": 5
        },
        {
          "name": "set_net_decrease_target",
          "groups": [
        {
-         "name": "CPU0 Temp",
+         "name": "CPUs Temp",
          "interface": "xyz.openbmc_project.Sensor.Value",
          "property": { "name": "Value" }
        },
        {
-         "name": "DIMMs_CPU0_ABCD Temp",
+         "name": "DIMMs Temp",
          "interface": "xyz.openbmc_project.Sensor.Value",
          "property": { "name": "Value" }
        }
       ],
      "state": 50.0,
+     "delta": 5
+       },
+       {
+         "name": "set_net_increase_target",
+         "groups": [
+       {
+         "name": "OCPv3 Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "BMC Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "CPU VR Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "Internal Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "Inlet Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       }
+     ],
+     "state": 40.0,
+     "delta": 5
+       },
+       {
+         "name": "set_net_decrease_target",
+         "groups": [
+       {
+         "name": "OCPv3 Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "BMC Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "CPU VR Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "Ambient Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       },
+       {
+         "name": "Inlet Temp",
+         "interface": "xyz.openbmc_project.Sensor.Value",
+         "property": { "name": "Value" }
+       }
+     ],
+     "state": 40.0,
      "delta": 5
        }
      ]

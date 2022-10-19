@@ -23,6 +23,7 @@ RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
 SUMMARY:${PN}-chassis = "Zvezda Chassis"
 RDEPENDS:${PN}-chassis = " \
 	x86-power-control \
+	button-ctrl \
 	obmc-host-failure-reboots \ 
         "
 
@@ -40,7 +41,6 @@ RDEPENDS:${PN}-system = " \
 	phosphor-hwmon \
 	webui-vue \
 	libpeci \
-	button-ctrl \
 	entity-manager \
 	ipmitool \
 	phosphor-hostlogger \
@@ -54,9 +54,4 @@ RDEPENDS:${PN}-system = " \
 	peci-pcie \
 	smbios-mdr \
 	phosphor-misc-http-redirect-awk \
-	iio-hwmon \
-	phosphor-power-systemd-links-monitor \
-	phosphor-power-utils \
-	phosphor-power \
-	phosphor-power-psu-monitor \
 	        "
