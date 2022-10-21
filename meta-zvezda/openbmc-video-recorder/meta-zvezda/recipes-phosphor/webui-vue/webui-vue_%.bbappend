@@ -5,6 +5,7 @@ SRC_URI:append:zvezda = " file://favicon.ico \
 			  file://logo-header.svg \
 			  file://built-on-openbmc-logo.svg \
 			  file://0001-locale-virtual-media-settings.patch \
+			  file://0002-remote-logs-changes.patch \
 			  file://0003-video-recorder-changes.patch \
 			  "
 
