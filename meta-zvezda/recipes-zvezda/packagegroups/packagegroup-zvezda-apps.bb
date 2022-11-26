@@ -24,7 +24,8 @@ SUMMARY:${PN}-chassis = "Zvezda Chassis"
 RDEPENDS:${PN}-chassis = " \
 	x86-power-control \
 	button-ctrl \
-	obmc-host-failure-reboots \ 
+	obmc-host-failure-reboots \
+	phosphor-led-manager-faultmonitor \
         "
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
@@ -48,6 +49,7 @@ RDEPENDS:${PN}-system = " \
 	phosphor-post-code-manager \
 	phosphor-host-postd \
 	phosphor-ipmi-host \
+	phosphor-ipmi-fru \
 	phosphor-ipmi-ipmb \
 	snmpctl \
 	msmtp \

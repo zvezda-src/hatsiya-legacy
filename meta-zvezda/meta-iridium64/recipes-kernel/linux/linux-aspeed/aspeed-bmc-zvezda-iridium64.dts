@@ -141,7 +141,7 @@
 		compatible = "gpio-leds";
 
 		enclosure_identify {
-			label = "rear_id";
+			label = "id";
 			default-state = "off";
 			gpios = <&gpio ASPEED_GPIO(H, 6) GPIO_ACTIVE_LOW>;
 		};
@@ -149,7 +149,7 @@
 		enclosure_fault {
 			label = "front_fault";
 			default-state = "off";
-			gpios = <&gpio ASPEED_GPIO(D, 7) GPIO_ACTIVE_LOW>;
+			gpios = <&gpio ASPEED_GPIO(Q, 6) GPIO_ACTIVE_LOW>;
 		};
 
 	};
@@ -201,6 +201,9 @@
 	snoop-ports = <0x80>;
 };
 
+&rtc {
+	status = "okay";
+};
 
 &uart1 {
 	status = "okay";
