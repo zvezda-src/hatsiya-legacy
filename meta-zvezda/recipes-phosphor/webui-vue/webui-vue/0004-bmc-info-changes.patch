@@ -1,0 +1,26 @@
+diff -r -u --new-file a/src/views/HardwareStatus/Inventory/InventoryTableBmcManager.vue b/src/views/HardwareStatus/Inventory/InventoryTableBmcManager.vue
+--- a/src/views/HardwareStatus/Inventory/InventoryTableBmcManager.vue	2022-12-01 14:25:04.118164769 +0300
++++ b/src/views/HardwareStatus/Inventory/InventoryTableBmcManager.vue	2022-12-01 14:25:07.094141665 +0300
+@@ -53,15 +53,18 @@
+                 <!-- Name -->
+                 <dt>{{ $t('pageInventory.table.name') }}:</dt>
+                 <dd>{{ dataFormatter(item.name) }}</dd>
+-                <!-- Part number -->
++                <!-- Part number
+                 <dt>{{ $t('pageInventory.table.partNumber') }}:</dt>
+                 <dd>{{ dataFormatter(item.partNumber) }}</dd>
+-                <!-- Serial number -->
++                -->
++                <!-- Serial number
+                 <dt>{{ $t('pageInventory.table.serialNumber') }}:</dt>
+                 <dd>{{ dataFormatter(item.serialNumber) }}</dd>
+-                <!-- Spare part number -->
++                -->
++                <!-- Spare part number
+                 <dt>{{ $t('pageInventory.table.sparePartNumber') }}:</dt>
+                 <dd>{{ dataFormatter(item.sparePartNumber) }}</dd>
++                -->
+                 <!-- Model -->
+                 <dt>{{ $t('pageInventory.table.model') }}:</dt>
+                 <dd>{{ dataFormatter(item.model) }}</dd>
+

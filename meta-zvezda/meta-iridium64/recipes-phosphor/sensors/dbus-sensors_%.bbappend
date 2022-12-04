@@ -1,0 +1,4 @@
+PACKAGECONFIG = " \
+    psusensor \
+    "
+

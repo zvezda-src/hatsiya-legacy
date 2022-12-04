@@ -1,0 +1,15 @@
+diff -r -u --new-file a/redfish-core/lib/managers.hpp b/redfish-core/lib/managers.hpp
+--- a/redfish-core/lib/managers.hpp	2022-12-01 14:09:42.257124256 +0300
++++ b/redfish-core/lib/managers.hpp	2022-12-01 14:09:47.969083313 +0300
+@@ -1950,7 +1950,10 @@
+             asyncResp->res.jsonValue["@odata.type"] =
+                 "#Manager.v1_11_0.Manager";
+             asyncResp->res.jsonValue["Id"] = "bmc";
+-            asyncResp->res.jsonValue["Name"] = "OpenBmc Manager";
++//            asyncResp->res.jsonValue["Name"] = "OpenBmc Manager";
++            asyncResp->res.jsonValue["Name"] = "Zvezda Hatsiya (Звезда Хатсия)";
++            asyncResp->res.jsonValue["manufacturer"] = "Zvezda Ldt. (ООО \"Звезда\")";
++
+             asyncResp->res.jsonValue["Description"] =
+                 "Baseboard Management Controller";
+             asyncResp->res.jsonValue["PowerState"] = "On";

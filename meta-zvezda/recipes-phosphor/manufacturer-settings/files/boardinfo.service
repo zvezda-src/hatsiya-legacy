@@ -1,6 +1,0 @@
-[Unit]
-Description=Boardinfo setter
-
-[Service]
-ExecStart=/usr/bin/boardinfo
-Type=one-shot

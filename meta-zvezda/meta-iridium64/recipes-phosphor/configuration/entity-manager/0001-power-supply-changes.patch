@@ -1,0 +1,18 @@
+diff -r -u --new-file a/src/EntityManager.cpp b/src/EntityManager.cpp
+--- a/src/EntityManager.cpp	2022-12-01 17:07:35.743212526 +0300
++++ b/src/EntityManager.cpp	2022-12-01 17:07:38.343192685 +0300
+@@ -1072,12 +1072,14 @@
+     // org.freedesktop.DBus.Properties signals.  Similarly if a process exits
+     // for any reason, expected or otherwise, we'll need a poke to remove
+     // entities from DBus.
++#if 0
+     sdbusplus::bus::match::match nameOwnerChangedMatch(
+         static_cast<sdbusplus::bus::bus&>(*systemBus),
+         sdbusplus::bus::match::rules::nameOwnerChanged(),
+         [&](sdbusplus::message::message&) {
+             propertiesChangedCallback(systemConfiguration, objServer);
+         });
++#endif
+     // We also need a poke from DBus when new interfaces are created or
+     // destroyed.
+     sdbusplus::bus::match::match interfacesAddedMatch(

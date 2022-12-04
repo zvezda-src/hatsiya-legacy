@@ -1,18 +1,19 @@
 FILESEXTRAPATHS:prepend:zvezda := "${THISDIR}/${PN}:"
 
-SRC_URI:append:zvezda = " file://favicon.ico \
-			  file://login-company-logo.svg \
-			  file://logo-header.svg \
-			  file://built-on-openbmc-logo.svg \
+SRC_URI:append:zvezda = " file://zvezda/favicon.ico \
+			  file://zvezda/login-company-logo.svg \
+			  file://zvezda/logo-header.svg \
+			  file://zvezda/built-on-openbmc-logo.svg \
 			  file://0001-locale-virtual-media-settings.patch \
 			  file://0002-remote-logs-changes.patch \
 			  file://0003-video-recorder-changes.patch \
+			  file://0004-bmc-info-changes.patch \
 			  "
 
 do_compile:prepend:zvezda() {
-	cp ${WORKDIR}/favicon.ico ${S}/public/
-	cp ${WORKDIR}/login-company-logo.svg ${S}/src/assets/images/
-	cp ${WORKDIR}/logo-header.svg ${S}/src/assets/images/
-	cp ${WORKDIR}/built-on-openbmc-logo.svg ${S}/src/assets/images/
+	cp ${WORKDIR}/zvezda/favicon.ico ${S}/public/
+	cp ${WORKDIR}/zvezda/login-company-logo.svg ${S}/src/assets/images/
+	cp ${WORKDIR}/zvezda/logo-header.svg ${S}/src/assets/images/
+	cp ${WORKDIR}/zvezda/built-on-openbmc-logo.svg ${S}/src/assets/images/
 }
 

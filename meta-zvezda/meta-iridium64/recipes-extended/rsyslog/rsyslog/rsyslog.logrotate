@@ -4,7 +4,7 @@
 /var/log/ipmi_sel
 {
     rotate 3
-    size 32k
+    size 64k
     missingok
     postrotate
         systemctl reload rsyslog 2> /dev/null || true
@@ -14,7 +14,7 @@
 /var/log/redfish
 {
     rotate 3
-    size 32k
+    size 64k
     missingok
     postrotate
         systemctl reload rsyslog 2> /dev/null || true

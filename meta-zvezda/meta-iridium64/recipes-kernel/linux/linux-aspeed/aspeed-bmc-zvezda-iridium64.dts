@@ -337,15 +337,15 @@
 			#size-cells = <0>;
 			reg = <0>;
 			
-			psu@58 {
-				compatible = "pmbus";
-				reg = <0x58>;
-			};
-			
-			psu@59 {
-				compatible = "pmbus";
-				reg = <0x59>;
-			};			
+//			psu@58 {
+//				compatible = "pmbus";
+//				reg = <0x58>;
+//			};
+//			
+//			psu@59 {
+//				compatible = "pmbus";
+//				reg = <0x59>;
+//			};			
 		};
     };
 };

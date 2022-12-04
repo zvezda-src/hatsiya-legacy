@@ -365,15 +365,15 @@ diff -r -u --new-file a/src/store/modules/Logs/EventLogStore.js b/src/store/modu
 -      break;
 -    }
 -  }
-+  //for (const event of events) {
-+  //  if (event.severity === 'Warning') {
-+  //    status = 'Warning';
-+  //  }
-+  //  if (event.severity === 'Critical') {
-+  //    status = 'Critical';
-+  //    break;
-+  //  }
-+  //}
++  for (const event of events) {
++    if (event.severity === 'Warning') {
++      status = 'Warning';
++    }
++    if (event.severity === 'Critical') {
++      status = 'Critical';
++      break;
++    }
++  }
    return status;
  };
  
