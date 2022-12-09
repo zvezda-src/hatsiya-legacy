@@ -52,90 +52,93 @@
                 };
         };
 
-//        iio-hwmon {
-//                compatible = "iio-hwmon";
-//		io-channels = <&adc 0>, <&adc 1>, <&adc 2>, <&adc 3>,
-//		              <&adc 4>, <&adc 5>, <&adc 6>, <&adc 7>
-//	};
-	iio-hwmon-12v {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 0>;
-	};
-
-	iio-hwmon-5v {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 1>;
-	};
-
-	iio-hwmon-3v {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 2>;
-	};
-
-	iio-hwmon-pvccin-cpu1 {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 3>;
-	};
-
-	iio-hwmon-pvccin-cpu2 {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 4>;
-	};
-
-	iio-hwmon-pvccio-cpu1 {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 5>;
-	};
-
-	iio-hwmon-pvccio-cpu2 {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 6>;
+        iio-hwmon {
+               compatible = "iio-hwmon";
+		io-channels = <&adc 0>, <&adc 1>, <&adc 2>, <&adc 3>,
+		              <&adc 4>, <&adc 5>, <&adc 6>, <&adc 7>,
+		              <&adc 8>, <&adc 9>, <&adc 10>, <&adc 11>,
+		              <&adc 12>, <&adc 13>, <&adc 14>, <&adc 15>;
 	};
 	
-	iio-hwmon-vbat {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 7>;
-	};
-
-	iio-hwmon-pvddq-abcd-cpu1 {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 8>;
-	};
-
-	iio-hwmon-pvddq-efgh-cpu1 {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 9>;
-	};
-
-	iio-hwmon-pvddq-abcd-cpu2 {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 10>;
-	};
-
-	iio-hwmon-pvddq-efgh-cpu2 {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 11>;
-	};
-
-	iio-hwmon-p1v05-pch-aux {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 12>;
-	};
-
-	iio-hwmon-pvnn-pch-aux {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 13>;
-	};
-
-	iio-hwmon-p1v8-pch-aux {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 14>;
-	};
-
-	iio-hwmon-pgppa-aux {
-		compatible = "iio-hwmon";
-		io-channels = <&adc 15>;
-	};
+//	iio-hwmon-12v {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 0>;
+//	};
+//
+//	iio-hwmon-5v {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 1>;
+//	};
+//
+//	iio-hwmon-3v {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 2>;
+//	};
+//
+//	iio-hwmon-pvccin-cpu1 {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 3>;
+//	};
+//
+//	iio-hwmon-pvccin-cpu2 {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 4>;
+//	};
+//
+//	iio-hwmon-pvccio-cpu1 {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 5>;
+//	};
+//
+//	iio-hwmon-pvccio-cpu2 {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 6>;
+//	};
+//	
+//	iio-hwmon-vbat {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 7>;
+//	};
+//
+//	iio-hwmon-pvddq-abcd-cpu1 {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 8>;
+//	};
+//
+//	iio-hwmon-pvddq-efgh-cpu1 {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 9>;
+//	};
+//
+//	iio-hwmon-pvddq-abcd-cpu2 {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 10>;
+//	};
+//
+//	iio-hwmon-pvddq-efgh-cpu2 {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 11>;
+//	};
+//
+//	iio-hwmon-p1v05-pch-aux {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 12>;
+//	};
+//
+//	iio-hwmon-pvnn-pch-aux {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 13>;
+//	};
+//
+//	iio-hwmon-p1v8-pch-aux {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 14>;
+//	};
+//
+//	iio-hwmon-pgppa-aux {
+//		compatible = "iio-hwmon";
+//		io-channels = <&adc 15>;
+//	};
 
 	leds {
 		compatible = "gpio-leds";
@@ -246,7 +249,7 @@
 	/*Y0-Y7*/	"SIO_S3","SIO_S5","","VBAT_VSEN8","","","","",
 	/*Z0-Z7*/	"","SIO_POWER_GOOD","","","","","","",
 	/*AA0-AA7*/	"","","","","","","","",
-	/*AB0-AB7*/	"POST_COMPLETE","","","","","","","",
+	/*AB0-AB7*/	"POST_COMPLETE","CHASSIS_INTRUSION","","","","","","",
 	/*AC0-AC7*/	"","","","","","","","";
 };
 
@@ -417,31 +420,37 @@
 				&pinctrl_pwm5_default>;
 
 	fan@0 {
+		compatible = "AspeedFan";
 		reg = <0x00>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x00>;
 	};
 
 	fan@1 {
+		compatible = "AspeedFan";
 		reg = <0x01>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x01>;
 	};
 
 	fan@2 {
+		compatible = "AspeedFan";
 		reg = <0x02>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x02>;
 	};
 
 	fan@3 {
+		compatible = "AspeedFan";
 		reg = <0x03>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x03>;
 	};
 
 	fan@4 {
+		compatible = "AspeedFan";
 		reg = <0x04>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x04>;
 	};
 
 	fan@5 {
+		compatible = "AspeedFan";
 		reg = <0x05>;
 		aspeed,fan-tach-ch = /bits/ 8 <0x05>;
 	};

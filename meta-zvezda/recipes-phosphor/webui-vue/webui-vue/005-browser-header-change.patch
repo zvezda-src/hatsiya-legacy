@@ -1,0 +1,26 @@
+diff --git a/public/index.html b/public/index.html
+index c355ece..3f68ebd 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -6,7 +6,7 @@
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+-    <title>OpenBMC Web UI</title>
++    <title>Zvezda Web UI</title>
+   </head>
+   <body>
+     <noscript>
+diff --git a/src/layouts/LoginLayout.vue b/src/layouts/LoginLayout.vue
+index cdff204..d77d9cf 100644
+--- a/src/layouts/LoginLayout.vue
++++ b/src/layouts/LoginLayout.vue
+@@ -24,7 +24,7 @@
+           <img
+             height="60px"
+             src="@/assets/images/built-on-openbmc-logo.svg"
+-            alt="Built on OpenBMC"
++            alt="Built on Zvezda"
+           />
+         </div>
+       </div>

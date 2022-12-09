@@ -1,11 +1,11 @@
 MACHINE_FEATURES += "\
         obmc-bmc-state-mgmt \
-        obmc-chassis-state-mgmt \
-        obmc-host-ipmi \
         obmc-host-state-mgmt \
+        obmc-chassis-state-mgmt \
         obmc-phosphor-chassis-mgmt \
         obmc-phosphor-fan-mgmt \
         obmc-phosphor-flash-mgmt \
+        obmc-host-ipmi \
         "
 
 VIRTUAL-RUNTIME_skeleton_workbook = "${MACHINE}-config"

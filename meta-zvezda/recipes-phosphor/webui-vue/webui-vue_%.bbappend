@@ -8,6 +8,7 @@ SRC_URI:append:zvezda = " file://zvezda/favicon.ico \
 			  file://0002-remote-logs-changes.patch \
 			  file://0003-video-recorder-changes.patch \
 			  file://0004-bmc-info-changes.patch \
+			  file://005-browser-header-change.patch \
 			  "
 
 do_compile:prepend:zvezda() {

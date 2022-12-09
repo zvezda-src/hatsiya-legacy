@@ -29,6 +29,7 @@ RDEPENDS:${PN}-chassis = " \
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
 RDEPENDS:${PN}-fans = " \
+	phosphor-pid-control \
 	"
 
 SUMMARY:${PN}-flash = "Zvezda Flash"
@@ -53,6 +54,5 @@ RDEPENDS:${PN}-system = " \
 	snmpctl \
 	msmtp \
 	peci-pcie \
-	smbios-mdr \
 	phosphor-misc-http-redirect-awk \
 	        "
