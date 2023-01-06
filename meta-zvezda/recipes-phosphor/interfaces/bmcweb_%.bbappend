@@ -3,6 +3,7 @@ FILESEXTRAPATHS:append := "${THISDIR}/${PN}:"
 SRC_URI:append = " file://0001-remote-logs-changes.patch \
                    file://0002-video-recorder-changes.patch \
                    file://0003-bmc-info-changes.patch \
+                   file://0004-system-name-changes.patch \
 			  "
 
 EXTRA_OEMESON:append = " \

@@ -1,0 +1,12 @@
+diff -r -u --new-file a/dbus-sdr/storagecommands.cpp b/dbus-sdr/storagecommands.cpp
+--- a/dbus-sdr/storagecommands.cpp	2022-12-23 03:06:50.737533875 +0300
++++ b/dbus-sdr/storagecommands.cpp	2022-12-23 03:07:24.029342225 +0300
+@@ -492,7 +492,7 @@
+                 areaLength *= 8; // it is in multiples of 8 bytes
+             }
+         }
+-        if (lastWriteAddr >= (areaLength + lastRecordStart))
++        if (lastWriteAddr >= (areaLength + lastRecordStart) && areaLength > 0)
+         {
+             atEnd = true;
+         }

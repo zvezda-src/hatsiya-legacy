@@ -1,0 +1,18 @@
+diff -r -u --new-file a/strgfnhandler.cpp b/strgfnhandler.cpp
+--- a/strgfnhandler.cpp	2022-12-23 01:37:43.627699493 +0300
++++ b/strgfnhandler.cpp	2022-12-23 01:37:45.803682664 +0300
+@@ -113,9 +113,9 @@
+ //-------------------------------------------------------
+ void register_netfn_storage_write_fru()
+ {
+-    std::printf("Registering NetFn:[0x%X], Cmd:[0x%X]\n", NETFUN_STORAGE,
+-                IPMI_CMD_WRITE_FRU_DATA);
+-
+-    ipmi_register_callback(NETFUN_STORAGE, IPMI_CMD_WRITE_FRU_DATA, NULL,
+-                           ipmiStorageWriteFruData, SYSTEM_INTERFACE);
++//    std::printf("Registering NetFn:[0x%X], Cmd:[0x%X]\n", NETFUN_STORAGE,
++//                IPMI_CMD_WRITE_FRU_DATA);
++//
++//    ipmi_register_callback(NETFUN_STORAGE, IPMI_CMD_WRITE_FRU_DATA, NULL,
++//                           ipmiStorageWriteFruData, SYSTEM_INTERFACE);
+ }

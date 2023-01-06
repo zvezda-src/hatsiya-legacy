@@ -6,8 +6,8 @@
             {
                 "types":
                 {
-                    "rType": "inventory",
-                    "fType": "sensors"
+                    "rType": "chassis",
+                    "fType": "all_sensors"
                 },
                 "paths":
                 [

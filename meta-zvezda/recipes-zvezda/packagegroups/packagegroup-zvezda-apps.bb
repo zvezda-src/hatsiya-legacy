@@ -25,6 +25,8 @@ RDEPENDS:${PN}-chassis = " \
 	x86-power-control \
 	button-ctrl \
 	obmc-host-failure-reboots \ 
+	phosphor-post-code-manager \
+	phosphor-host-postd \
         "
 
 SUMMARY:${PN}-fans = "Zvedza Fans"
@@ -39,17 +41,11 @@ RDEPENDS:${PN}-flash = " \
 
 SUMMARY:${PN}-system = "Zvezda System"
 RDEPENDS:${PN}-system = " \
-	phosphor-hwmon \
 	webui-vue \
 	libpeci \
 	entity-manager \
 	ipmitool \
 	dbus-sensors \
-	phosphor-hostlogger \
-	phosphor-sel-logger \
-	phosphor-post-code-manager \
-	phosphor-host-postd \
-	phosphor-ipmi-host \
 	phosphor-ipmi-ipmb \
 	snmpctl \
 	msmtp \

@@ -1,0 +1,20 @@
+diff -r -u --new-file a/redfish-core/lib/systems.hpp b/redfish-core/lib/systems.hpp
+--- a/redfish-core/lib/systems.hpp	2022-12-23 01:56:02.955146954 +0300
++++ b/redfish-core/lib/systems.hpp	2022-12-23 01:56:05.559126635 +0300
+@@ -2885,10 +2885,13 @@
+                         const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
+             asyncResp->res.jsonValue["@odata.type"] =
+                 "#ComputerSystem.v1_16_0.ComputerSystem";
+-            asyncResp->res.jsonValue["Name"] = "system";
+-            asyncResp->res.jsonValue["Id"] = "system";
++//            asyncResp->res.jsonValue["Name"] = "system";
++//            asyncResp->res.jsonValue["Id"] = "system";
++            asyncResp->res.jsonValue["Name"] = "Zvezda_Iridium_X_Server";
++            asyncResp->res.jsonValue["Id"] = "Zvezda_Iridium_X_Server";
+             asyncResp->res.jsonValue["SystemType"] = "Physical";
+-            asyncResp->res.jsonValue["Description"] = "Computer System";
++//            asyncResp->res.jsonValue["Description"] = "Computer System";
++            asyncResp->res.jsonValue["Description"] = "Zvezda_Iridium_X_System";
+             asyncResp->res.jsonValue["ProcessorSummary"]["Count"] = 0;
+             asyncResp->res.jsonValue["ProcessorSummary"]["Status"]["State"] =
+                 "Disabled";

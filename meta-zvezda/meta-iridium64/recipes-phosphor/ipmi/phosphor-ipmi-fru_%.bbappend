@@ -2,6 +2,9 @@ inherit obmc-phosphor-systemd
 
 FILESEXTRAPATHS:prepend:iridium64 := "${THISDIR}/${PN}:"
 
+SRC_URI:append = " file://0001-fru-edit-changes.patch \
+			  "
+
 EEPROM_NAMES = "motherboard"
 
 EEPROMFMT = "system/chassis/{0}"
